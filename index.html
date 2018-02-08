@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <style>
+    .btn-secondary { 
+      color: #000;
+      background-color: #e9ecef;
+      border-color: #ced4da;
+    }
+    </style>
+    <title>Yathra - Plannera din resa</title>
+  </head>
+  <body>
+    <div class="container">
+    <h1 class="text-center">Yathra</h1>
+    </div>
+    <div id="search" class="container-fluid">
+      <div class="row" >
+        <div class="col-lg-6 col-md-12">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">From</span>
+              <div v-if="from !== from_station.name" class="dropdown-menu dropdown-menu-right" style="display:block;">
+                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item" v-for="station in fromStations">{{station.name}}</button>
+              </div>
+            </div>
+            <input type="text" class="form-control" v-model="from">
+            <button type="button" class="btn btn-secondary float-left" style="border-radius:0; border-left:0;border-right:0" v-on:click="switch_from_to">⇄</button>
+            <input type="text" class="form-control" v-model="to">
+            <div class="input-group-append">
+              <span class="input-group-text">To</span>
+              <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu-right" style="display:block;">
+                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item" v-for="station in toStations">{{station.name}}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-12">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Datum</span>
+            </div>
+            <input type="date" class="form-control" v-model="date" placeholder="2018-01-20">
+            <div class="input-group-append">
+              <span class="input-group-text">{{ slider_to_time }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-12">
+          <div class="mx-auto" style="width: fit-content;">
+            <div class="btn-group">
+              <button type="button" onclick="find_in_timetable()" class="btn btn-primary" >Sök</button>
+              <button type="button" onclick="save_search()" class="btn btn-secondary">Spara</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row" >
+        <div class="col-lg-12">
+          <input style="width: 100%; -webkit-appearance: none; appearance: none;height: 4px; background: #007bff;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;" v-model="time_slider" type="range" min="0" max="1439">
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3">
+          <div id="searches">
+            <ul class="list-group small">
+              <li v-for="search, i in searches" class="list-group-item">
+                {{ search.from_station.name }} <br> {{ search.to_station.name }}<br>
+                {{ search.date }} - {{ slider_to_time_conv(search.time_slider) }}<br>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-secondary" v-on:click="searches.splice(i, 1)">❌</button>
+                  <button type="button" class="btn btn-sm btn-secondary" v-on:click="restore_search(search)">▶</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div id="timetables">
+            <ul class="list-group" v-if="timetables.length > 0">
+              <li class="list-group-item btn btn-secondary">
+                <div class="mx-auto" style="width: fit-content;" v-on:click="before_in_timetable();">
+                  Earlier trips
+                </div>
+              </li>
+              <li v-for="trip, i in timetables" class="list-group-item">
+                {{ trip.LegList.Leg[0].Origin.time }} - {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - {{ trip.duration  }}
+                <div v-for="leg in trip.LegList.Leg" v-if="trip.showLegs==true">
+                  {{ leg.Origin.name }} - {{ leg.Destination.name }} <br>
+                </div>
+                <br>
+                <div class="btn-group">
+                  <button v-on:click="timetables[i].showLegs=true" type="button" class="btn btn-sm btn-secondary">⤵</button>
+                  <button v-on:click="trips.trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
+                </div>
+              </li>
+              <li class="list-group-item btn btn-secondary">
+                <div class="mx-auto" style="width: fit-content;" v-on:click="next_in_timetable();">
+                  Later trips
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div id="trips">
+            <ul class="list-group">
+              <li v-for="trip, i in trips" class="list-group-item" style="white-space: nowrap; overflow: hidden;">
+                {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} | {{ trip.LegList.Leg[0].Origin.name }} <br>
+                {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} | {{ trip.LegList.Leg.slice(-1)[0].Destination.name }}
+                <br>
+                <div class="btn-group">
+                  <button class="btn btn-sm btn-secondary" v-on:click="trips.splice(i, 1)" type="button">❌</button>
+                  <button class="btn btn-sm btn-secondary" type="button">📅</button>
+                  <button v-on:click="" type="button" class="btn btn-sm btn-secondary">⤵</button>
+                  <a class="btn btn-sm btn-secondary" target="_blank" v-bind:href="'https://www.'+trip.LegList.Leg[0].Product.operatorCode+'.se'" v-bind:title="trip.LegList.Leg[0].Product.operator">🎫</a>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+
+
+function store_trips(){
+  localStorage.setItem("trips_list", JSON.stringify(trips.trips));
+}
+
+function save_search(){
+  searches.searches.push({
+    from_station: search.from_station,
+    to_station: search.to_station,
+    date: search.date,
+    time_slider: search.time_slider
+    });
+  localStorage.setItem("searches_list", JSON.stringify(searches.searches));
+}
+
+function restore_search(load_search){
+  search.from_station = load_search.from_station;
+  search.from = load_search.from_station.name;
+  search.to_station = load_search.to_station;
+  search.to = load_search.to_station.name;
+  search.date = load_search.date;
+  search.time_slider = load_search.time_slider;
+  find_in_timetable();
+}
+
+
+function slider_to_time_conv(slider){
+      var hours = Math.floor(slider / 60);
+      var minutes = slider - hours * 60;
+      return ("0" + hours).substr(-2) + ":" + ("0" + minutes).substr(-2);
+    }
+
+now = new Date();
+var search = new Vue({
+  el: '#search',
+  data:{
+    from:"",
+    from_station: {"id":"","name":""},
+    to:"",
+    to_station: {"id":"","name":""},
+    date:now.toISOString().substring(0,10),
+    allstations: [],
+    time_slider: "600"
+  },
+  methods: {
+    filterFrom: function (station) {
+      return station.name.toUpperCase().startsWith(this.from.toUpperCase());
+    },
+    filterFromIn: function (station) {
+      return station.name.toUpperCase().includes(this.from.toUpperCase(), 1);
+    },
+    filterTo: function (station) {
+      return station.name.toUpperCase().startsWith(this.to.toUpperCase());
+    },
+    filterToIn: function (station) {
+      return station.name.toUpperCase().includes(this.to.toUpperCase(), 1);
+    },
+    set_from_station(station) {
+      this.from_station = station;
+      this.from = station.name;
+    },
+    set_to_station(station) {
+      this.to_station = station;
+      this.to = station.name;
+    },
+    switch_from_to(){
+      to = this.to;
+      to_station= this.to_station;
+      this.to = this.from;
+      this.to_station = this.from_station;
+      this.from = to;
+      this.from_station = to_station;
+    }
+  },
+  computed: {
+    slider_to_time: function (){
+      return slider_to_time_conv(this.time_slider);
+    },
+    fromStations: function () {
+      if (this.from == "" ){
+        return [];
+      }
+      startStations = this.allstations.filter(this.filterFrom);
+      inStations = this.allstations.slice(0, 10);
+      if (startStations.length < 10){
+       inStations = this.allstations.filter(this.filterFromIn);
+       }
+      validStations = startStations.concat(inStations);
+      return validStations.slice(0, 10).sort(compareStations);
+    },
+    toStations: function () {
+      if (this.to == "" ){
+        return []
+      }
+      startStations = this.allstations.filter(this.filterTo);
+      inStations = this.allstations.slice(0, 10);
+      if (startStations.length < 10){
+       inStations = this.allstations.filter(this.filterToIn);
+       }
+      validStations = startStations.concat(inStations);
+      return validStations.slice(0, 10).sort(compareStations);
+    }
+  }
+})
+
+var searches = new Vue({
+  el: '#searches',
+  data: {
+    searches: []
+  }
+})
+
+var timetables = new Vue({
+  el: '#timetables',
+  data: {
+    scrB: "",
+    scrF: "",
+    timetables: []
+  }
+})
+
+var trips = new Vue({
+  el: '#trips',
+  data: {
+    trips: []
+  }
+})
+
+function find_in_timetable(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+search.from_station.id+'&destId='+search.to_station.id+'&time='+search.slider_to_time+'&date='+search.date+'&format=json');
+  xhr.onreadystatechange = function () {
+    var DONE = 4; // readyState 4 means the request is done.
+    var OK = 200; // status 200 is a successful return.
+    if (xhr.readyState === DONE) {
+      if (xhr.status === OK)
+        timetables.timetables= JSON.parse(xhr.responseText).Trip
+        timetables.scrB = JSON.parse(xhr.responseText).scrB
+        timetables.scrF = JSON.parse(xhr.responseText).scrF
+      } else {
+        console.log('Error: ' + xhr.status); // An error occurred during the request.
+      }
+    }
+  xhr.send(null);
+}
+
+function next_in_timetable(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+search.from_station.id+'&destId='+search.to_station.id+'&time='+search.slider_to_time+'&date='+search.date+'&format=json&context='+timetables.scrF);
+  xhr.onreadystatechange = function () {
+    var DONE = 4; // readyState 4 means the request is done.
+    var OK = 200; // status 200 is a successful return.
+    if (xhr.readyState === DONE) {
+      if (xhr.status === OK)
+        timetables.timetables = timetables.timetables.concat(JSON.parse(xhr.responseText).Trip)
+        timetables.scrF = JSON.parse(xhr.responseText).scrF
+      } else {
+        console.log('Error: ' + xhr.status); // An error occurred during the request.
+      }
+    }
+  xhr.send(null);
+}
+
+
+function before_in_timetable(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+search.from_station.id+'&destId='+search.to_station.id+'&time='+search.slider_to_time+'&date='+search.date+'&format=json&context='+timetables.scrB);
+  xhr.onreadystatechange = function () {
+    var DONE = 4; // readyState 4 means the request is done.
+    var OK = 200; // status 200 is a successful return.
+    if (xhr.readyState === DONE) {
+      if (xhr.status === OK)
+        timetables.timetables = JSON.parse(xhr.responseText).Trip.concat(timetables.timetables)
+        timetables.scrB = JSON.parse(xhr.responseText).scrB
+      } else {
+        console.log('Error: ' + xhr.status); // An error occurred during the request.
+      }
+    }
+  xhr.send(null);
+}
+
+
+// ref: http://stackoverflow.com/a/1293163/2343
+// This will parse a delimited string into an array of
+// arrays. The default delimiter is the comma, but this
+// can be overriden in the second argument.
+function CSVToArray( strData, strDelimiter ){
+    // Check to see if the delimiter is defined. If not,
+    // then default to comma.
+    strDelimiter = (strDelimiter || ",");
+
+    // Create a regular expression to parse the CSV values.
+    var objPattern = new RegExp(
+        (
+            // Delimiters.
+            "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+
+            // Quoted fields.
+            "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+
+            // Standard fields.
+            "([^\"\\" + strDelimiter + "\\r\\n]*))"
+        ),
+        "gi"
+        );
+
+
+    // Create an array to hold our data. Give the array
+    // a default empty first row.
+    var arrData = [[]];
+
+    // Create an array to hold our individual pattern
+    // matching groups.
+    var arrMatches = null;
+
+
+    // Keep looping over the regular expression matches
+    // until we can no longer find a match.
+    while (arrMatches = objPattern.exec( strData )){
+
+        // Get the delimiter that was found.
+        var strMatchedDelimiter = arrMatches[ 1 ];
+
+        // Check to see if the given delimiter has a length
+        // (is not the start of string) and if it matches
+        // field delimiter. If id does not, then we know
+        // that this delimiter is a row delimiter.
+        if (
+            strMatchedDelimiter.length &&
+            strMatchedDelimiter !== strDelimiter
+            ){
+
+            // Since we have reached a new row of data,
+            // add an empty row to our data array.
+            arrData.push( [] );
+
+        }
+
+        var strMatchedValue;
+
+        // Now that we have our delimiter out of the way,
+        // let's check to see which kind of value we
+        // captured (quoted or unquoted).
+        if (arrMatches[ 2 ]){
+
+            // We found a quoted value. When we capture
+            // this value, unescape any double quotes.
+            strMatchedValue = arrMatches[ 2 ].replace(
+                new RegExp( "\"\"", "g" ),
+                "\""
+                );
+
+        } else {
+
+            // We found a non-quoted value.
+            strMatchedValue = arrMatches[ 3 ];
+
+        }
+
+
+        // Now that we have our value string, let's add
+        // it to the data array.
+        arrData[ arrData.length - 1 ].push( strMatchedValue );
+    }
+
+    // Return the parsed data.
+    return( arrData );
+}
+
+function to_station(station){
+  return {"id":station[0],"name":station[1]}
+}
+
+function get_stations(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'stops.txt');
+  xhr.onreadystatechange = function () {
+    var DONE = 4; // readyState 4 means the request is done.
+    var OK = 200; // status 200 is a successful return.
+    if (xhr.readyState === DONE) {
+      if (xhr.status === OK)
+        stations = CSVToArray(xhr.responseText, ",").filter(station => station[0]!=="");
+        search.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
+      } else {
+        console.log('Error: ' + xhr.status); // An error occurred during the request.
+      }
+    }
+  xhr.send(null);
+}
+
+get_stations();
+
+function compareStations(a, b) {
+  var nameA = a.id.toUpperCase();
+  var nameB = b.id.toUpperCase();
+  if (nameA < nameB) {
+    return -1;
+  }
+  if (nameA > nameB) {
+    return 1;
+  }
+  return 0;
+}
+
+try{
+  list = JSON.parse(localStorage.getItem("searches_list"));
+  if(list != null){
+    searches.searches = list;
+    restore_search(searches.searches[0]);
+  }
+}
+catch(a){
+}
+
+try{
+  list = JSON.parse(localStorage.getItem("trips_list"));
+  if(list != null){
+    trips.trips = list;
+  }
+
+}
+catch(a){
+}
+
+
+    </script>
+    <a href="bankid://redirect=https%3A%2F%2Fwww.idg.se%2F">bankid</a>
+  </body>
+</html>
