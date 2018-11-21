@@ -16,10 +16,8 @@
     <title>Yathra - Plannera din resa</title>
   </head>
   <body>
-    <div class="container">
-    <h1 class="text-center">Yathra</h1>
-    </div>
-    <div id="search" class="container-fluid">
+    <div id="yathra" class="container-fluid">
+      <h1 class="text-center">Yathra</h1>
       <div class="row" >
         <div class="col-lg-6 col-md-12">
           <div class="input-group">
@@ -54,8 +52,8 @@
         <div class="col-lg-2 col-md-12">
           <div class="mx-auto" style="width: fit-content;">
             <div class="btn-group">
-              <button type="button" onclick="find_in_timetable()" class="btn btn-primary" >Sök</button>
-              <button type="button" onclick="save_search()" class="btn btn-secondary">Spara</button>
+              <button type="button" v-on:click="find_in_timetable" class="btn btn-primary" >Sök</button>
+              <button type="button" v-on:click="save_search" class="btn btn-secondary">Spara</button>
             </div>
           </div>
         </div>
@@ -65,12 +63,10 @@
           <input style="width: 100%; -webkit-appearance: none; appearance: none;height: 4px; background: #007bff;outline: none;opacity: 0.7;-webkit-transition: .2s;transition: opacity .2s;" v-model="time_slider" type="range" min="0" max="1439">
         </div>
       </div>
-    </div>
-    <hr>
-    <div class="container-fluid">
+      <hr>
       <div class="row">
         <div class="col-lg-3">
-          <div id="searches">
+          <div>
             <ul class="list-group small">
               <li v-for="search, i in searches" class="list-group-item">
                 {{ search.from_station.name }} <br> {{ search.to_station.name }}<br>
@@ -84,7 +80,7 @@
           </div>
         </div>
         <div class="col-lg-6">
-          <div id="timetables">
+          <div>
             <ul class="list-group" v-if="timetables.length > 0">
               <li class="list-group-item btn btn-secondary">
                 <div class="mx-auto" style="width: fit-content;" v-on:click="before_in_timetable();">
@@ -99,7 +95,7 @@
                 <br>
                 <div class="btn-group">
                   <button v-on:click="timetables[i].showLegs=true" type="button" class="btn btn-sm btn-secondary">⤵</button>
-                  <button v-on:click="trips.trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
+                  <button v-on:click="trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
                 </div>
               </li>
               <li class="list-group-item btn btn-secondary">
@@ -111,7 +107,7 @@
           </div>
         </div>
         <div class="col-lg-3">
-          <div id="trips">
+          <div>
             <ul class="list-group">
               <li v-for="trip, i in trips" class="list-group-item" style="white-space: nowrap; overflow: hidden;">
                 {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} | {{ trip.LegList.Leg[0].Origin.name }} <br>
@@ -119,7 +115,7 @@
                 <br>
                 <div class="btn-group">
                   <button class="btn btn-sm btn-secondary" v-on:click="trips.splice(i, 1)" type="button">❌</button>
-                  <button class="btn btn-sm btn-secondary" type="button">📅</button>
+                  <button class="btn btn-sm btn-secondary" v-on:click="makeICS(1, 2, trip.LegList.Leg[0].Origin.name, trip.LegList.Leg.slice(-1)[0].Destination.name, 5)" type="button">📅</button>
                   <button v-on:click="" type="button" class="btn btn-sm btn-secondary">⤵</button>
                   <a class="btn btn-sm btn-secondary" target="_blank" v-bind:href="'https://www.'+trip.LegList.Leg[0].Product.operatorCode+'.se'" v-bind:title="trip.LegList.Leg[0].Product.operator">🎫</a>
                 </div>
@@ -129,33 +125,8 @@
         </div>
       </div>
     </div>
-    <script>
-
-
-function store_trips(){
-  localStorage.setItem("trips_list", JSON.stringify(trips.trips));
-}
-
-function save_search(){
-  searches.searches.push({
-    from_station: search.from_station,
-    to_station: search.to_station,
-    date: search.date,
-    time_slider: search.time_slider
-    });
-  localStorage.setItem("searches_list", JSON.stringify(searches.searches));
-}
-
-function restore_search(load_search){
-  search.from_station = load_search.from_station;
-  search.from = load_search.from_station.name;
-  search.to_station = load_search.to_station;
-  search.to = load_search.to_station.name;
-  search.date = load_search.date;
-  search.time_slider = load_search.time_slider;
-  find_in_timetable();
-}
-
+  </body>
+  <script>
 
 function slider_to_time_conv(slider){
       var hours = Math.floor(slider / 60);
@@ -164,8 +135,8 @@ function slider_to_time_conv(slider){
     }
 
 now = new Date();
-var search = new Vue({
-  el: '#search',
+var yathra = new Vue({
+  el: '#yathra',
   data:{
     from:"",
     from_station: {"id":"","name":""},
@@ -173,7 +144,12 @@ var search = new Vue({
     to_station: {"id":"","name":""},
     date:now.toISOString().substring(0,10),
     allstations: [],
-    time_slider: "600"
+    time_slider: "600",
+    searches: [],
+    scrB: "",
+    scrF: "",
+    timetables: [],
+    trips: []
   },
   methods: {
     filterFrom: function (station) {
@@ -203,7 +179,63 @@ var search = new Vue({
       this.to_station = this.from_station;
       this.from = to;
       this.from_station = to_station;
-    }
+    },
+    find_in_timetable: function (){
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json');
+      var next = this
+      xhr.onreadystatechange = function () {
+        var DONE = 4; // readyState 4 means the request is done.
+        var OK = 200; // status 200 is a successful return.
+        if (xhr.readyState === DONE) {
+          if (xhr.status === OK) {
+            console.log('Message: ' + next.timetables);
+            next.timetables = JSON.parse(xhr.responseText).Trip
+            next.scrB = JSON.parse(xhr.responseText).scrB
+            next.scrF = JSON.parse(xhr.responseText).scrF
+          } else {
+            console.log('Message state: ' + xhr.status); // An error occurred during the request.
+          }
+        }
+      }
+      xhr.send(null);
+    },
+    save_search: function (){
+      this.searches.push({
+        from_station: this.from_station,
+        to_station: this.to_station,
+        date: this.date,
+        time_slider: this.time_slider
+      });
+    localStorage.setItem("searches_list", JSON.stringify(this.searches));
+    },
+    restore_search: function (load_search){
+      this.from_station = load_search.from_station;
+      this.from = load_search.from_station.name;
+      this.to_station = load_search.to_station;
+      this.to = load_search.to_station.name;
+      this.date = load_search.date;
+      this.time_slider = load_search.time_slider;
+      this.find_in_timetable();
+    },
+    store_trips: function (){
+        localStorage.setItem("trips_list", JSON.stringify(this.trips));
+    },
+    makeICS: function (start, end, from, to, company){
+      calendar = "BEGIN:VCALENDAR" + "\n" +
+        "VERSION:2.0" + "\n" +
+        "PRODID:-//hacksw/handcal//NONSGML v1.0//EN" + "\n" +
+        "BEGIN:VEVENT" + "\n" +
+        "UID:19970610T172345Z-AF23B2@example.com" + "\n" +
+        "DTSTAMP:20181125T172345Z" + "\n" +
+        "DTSTART:20181125T170000Z" + "\n" +
+        "DTEND:20181125T200000Z" + "\n" +
+        "SUMMARY:" + company + "\n" +
+        "LOCATION:" + from + " -> " + to + "\n" +
+        "END:VEVENT" + "\n" +
+        "END:VCALENDAR";
+     window.open( "data:text/calendar;charset=utf8," + escape(calendar));
+     }
   },
   computed: {
     slider_to_time: function (){
@@ -235,47 +267,6 @@ var search = new Vue({
     }
   }
 })
-
-var searches = new Vue({
-  el: '#searches',
-  data: {
-    searches: []
-  }
-})
-
-var timetables = new Vue({
-  el: '#timetables',
-  data: {
-    scrB: "",
-    scrF: "",
-    timetables: []
-  }
-})
-
-var trips = new Vue({
-  el: '#trips',
-  data: {
-    trips: []
-  }
-})
-
-function find_in_timetable(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+search.from_station.id+'&destId='+search.to_station.id+'&time='+search.slider_to_time+'&date='+search.date+'&format=json');
-  xhr.onreadystatechange = function () {
-    var DONE = 4; // readyState 4 means the request is done.
-    var OK = 200; // status 200 is a successful return.
-    if (xhr.readyState === DONE) {
-      if (xhr.status === OK)
-        timetables.timetables= JSON.parse(xhr.responseText).Trip
-        timetables.scrB = JSON.parse(xhr.responseText).scrB
-        timetables.scrF = JSON.parse(xhr.responseText).scrF
-      } else {
-        console.log('Error: ' + xhr.status); // An error occurred during the request.
-      }
-    }
-  xhr.send(null);
-}
 
 function next_in_timetable(){
   var xhr = new XMLHttpRequest();
@@ -413,7 +404,7 @@ function get_stations(){
     if (xhr.readyState === DONE) {
       if (xhr.status === OK)
         stations = CSVToArray(xhr.responseText, ",").filter(station => station[0]!=="");
-        search.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
+        yathra.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
       } else {
         console.log('Error: ' + xhr.status); // An error occurred during the request.
       }
@@ -438,7 +429,7 @@ function compareStations(a, b) {
 try{
   list = JSON.parse(localStorage.getItem("searches_list"));
   if(list != null){
-    searches.searches = list;
+    yathra.searches = list;
     restore_search(searches.searches[0]);
   }
 }
@@ -448,15 +439,11 @@ catch(a){
 try{
   list = JSON.parse(localStorage.getItem("trips_list"));
   if(list != null){
-    trips.trips = list;
+    yathra.trips = list;
   }
 
 }
 catch(a){
 }
-
-
-    </script>
-    <a href="bankid://redirect=https%3A%2F%2Fwww.idg.se%2F">bankid</a>
-  </body>
+  </script>
 </html>
