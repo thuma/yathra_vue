@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <style>
@@ -11,6 +11,12 @@
       color: #000;
       background-color: #e9ecef;
       border-color: #ced4da;
+    }
+    span.kommun {
+      font-size: 10px;
+    }
+    button.kommun {
+      line-height: 15px;
     }
     </style>
     <title>Yathra - Plannera din resa</title>
@@ -23,8 +29,8 @@
           <div class="input-group">
             <div class="input-group-prepend">
               <span class="input-group-text">From</span>
-              <div v-if="from !== from_station.name" class="dropdown-menu dropdown-menu-right" style="display:block;">
-                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item" v-for="station in fromStations">{{station.name}}</button>
+              <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
+                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
               </div>
             </div>
             <input type="text" class="form-control" v-model="from">
@@ -32,8 +38,8 @@
             <input type="text" class="form-control" v-model="to">
             <div class="input-group-append">
               <span class="input-group-text">To</span>
-              <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu-right" style="display:block;">
-                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item" v-for="station in toStations">{{station.name}}</button>
+              <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu-right kommun" style="display:block;">
+                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
               </div>
             </div>
           </div>
@@ -149,7 +155,8 @@ var yathra = new Vue({
     scrB: "",
     scrF: "",
     timetables: [],
-    trips: []
+    trips: [],
+    areas: {}
   },
   methods: {
     filterFrom: function (station) {
@@ -392,12 +399,12 @@ function CSVToArray( strData, strDelimiter ){
 }
 
 function to_station(station){
-  return {"id":station[0],"name":station[1]}
+  return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4]};
 }
 
 function get_stations(){
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'stops.txt');
+  xhr.open('GET', 'exstops.txt');
   xhr.onreadystatechange = function () {
     var DONE = 4; // readyState 4 means the request is done.
     var OK = 200; // status 200 is a successful return.
@@ -411,8 +418,24 @@ function get_stations(){
     }
   xhr.send(null);
 }
-
 get_stations();
+
+function get_areas(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'areas.json');
+  xhr.onreadystatechange = function () {
+    var DONE = 4; // readyState 4 means the request is done.
+    var OK = 200; // status 200 is a successful return.
+    if (xhr.readyState === DONE) {
+      if (xhr.status === OK)
+        yathra.areas = JSON.parse(xhr.responseText);
+      } else {
+        console.log('Error: ' + xhr.status); // An error occurred during the request.
+      }
+    }
+  xhr.send(null);
+}
+get_areas();
 
 function compareStations(a, b) {
   var nameA = a.id.toUpperCase();
