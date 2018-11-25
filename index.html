@@ -73,9 +73,11 @@
       <div class="row">
         <div class="col-lg-3">
           <div>
+            <h3 class="text-center" >Sökrningar</h3>
             <ul class="list-group small">
               <li v-for="search, i in searches" class="list-group-item">
-                {{ search.from_station.name }} <br> {{ search.to_station.name }}<br>
+                🚉 <a v-bind:href="'https://www.google.com/maps/search/'+search.from_station.lat+','+search.from_station.lon">{{ search.from_station.name }}</a> {{  }} <br> 
+                🎯 <a v-bind:href="'https://www.google.com/maps/search/'+search.to_station.lat+','+search.to_station.lon">{{ search.to_station.name }}</a><br>
                 {{ search.date }} - {{ slider_to_time_conv(search.time_slider) }}<br>
                 <div class="btn-group">
                   <button type="button" class="btn btn-sm btn-secondary" v-on:click="searches.splice(i, 1)">❌</button>
@@ -87,14 +89,15 @@
         </div>
         <div class="col-lg-6">
           <div>
+            <h3 class="text-center" >Söksvar</h3>
             <ul class="list-group" v-if="timetables.length > 0">
-              <li class="list-group-item btn btn-secondary">
-                <div class="mx-auto" style="width: fit-content;" v-on:click="before_in_timetable();">
+              <li class="list-group-item btn btn-secondary" v-on:click="before_in_timetable">
+                <div class="mx-auto" style="width: fit-content;">
                   Earlier trips
                 </div>
               </li>
               <li v-for="trip, i in timetables" class="list-group-item">
-                {{ trip.LegList.Leg[0].Origin.time }} - {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - {{ trip.duration  }}
+                {{ trip.LegList.Leg[0].Origin.time }} - {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - {{ trip.duration.split("T")[1].split("H")[0] }} timmar {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} minuter - <span title="Antal byte">{{ trip.LegList.Leg.length - 1 }} ⇄</span>
                 <div v-for="leg in trip.LegList.Leg" v-if="trip.showLegs==true">
                   {{ leg.Origin.name }} - {{ leg.Destination.name }} <br>
                 </div>
@@ -104,8 +107,8 @@
                   <button v-on:click="trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
                 </div>
               </li>
-              <li class="list-group-item btn btn-secondary">
-                <div class="mx-auto" style="width: fit-content;" v-on:click="next_in_timetable();">
+              <li class="list-group-item btn btn-secondary" v-on:click="next_in_timetable">
+                <div class="mx-auto" style="width: fit-content;" >
                   Later trips
                 </div>
               </li>
@@ -114,10 +117,11 @@
         </div>
         <div class="col-lg-3">
           <div>
-            <ul class="list-group">
+            <h3 class="text-center" >Resor</h3>
+            <ul class="list-group small">
               <li v-for="trip, i in trips" class="list-group-item" style="white-space: nowrap; overflow: hidden;">
-                {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} | {{ trip.LegList.Leg[0].Origin.name }} <br>
-                {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} | {{ trip.LegList.Leg.slice(-1)[0].Destination.name }}
+                {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} 🚉 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg[0].Origin.lat+','+trip.LegList.Leg[0].Origin.lon" target="_blank">{{ trip.LegList.Leg[0].Origin.name }}</a><br>
+                {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} 🎯 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg.slice(-1)[0].Destination.lat+','+trip.LegList.Leg.slice(-1)[0].Destination.lon" target="_blank">{{ trip.LegList.Leg.slice(-1)[0].Destination.name }}</a>
                 <br>
                 <div class="btn-group">
                   <button class="btn btn-sm btn-secondary" v-on:click="trips.splice(i, 1)" type="button">❌</button>
@@ -159,6 +163,43 @@ var yathra = new Vue({
     areas: {}
   },
   methods: {
+    next_in_timetable: function (e){
+      console.log("asd");
+      var xhr = new XMLHttpRequest();
+      var next = this
+      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json&context='+this.scrF);
+      xhr.onreadystatechange = function () {
+        var DONE = 4; // readyState 4 means the request is done.
+        var OK = 200; // status 200 is a successful return.
+        if (xhr.readyState === DONE) {
+          if (xhr.status === OK)
+            next.timetables = next.timetables.concat(JSON.parse(xhr.responseText).Trip)
+            next.scrF = JSON.parse(xhr.responseText).scrF
+          } else {
+            console.log('Error: ' + xhr.status); // An error occurred during the request.
+          }
+        }
+      xhr.send(null);
+    },
+    before_in_timetable: function(e){
+      console.log("asd");
+      var xhr = new XMLHttpRequest();
+      var next = this
+      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json&context='+this.scrB);
+      xhr.onreadystatechange = function () {
+        var DONE = 4; // readyState 4 means the request is done.
+        var OK = 200; // status 200 is a successful return.
+        if (xhr.readyState === DONE) {
+          if (xhr.status === OK)
+            next.timetables = JSON.parse(xhr.responseText).Trip.concat(next.timetables)
+            console.log(next.timetables.lenght);
+            next.scrB = JSON.parse(xhr.responseText).scrB
+          } else {
+            console.log('Error: ' + xhr.status); // An error occurred during the request.
+          }
+        }
+      xhr.send(null);
+    },
     filterFrom: function (station) {
       return station.name.toUpperCase().startsWith(this.from.toUpperCase());
     },
@@ -274,42 +315,6 @@ var yathra = new Vue({
     }
   }
 })
-
-function next_in_timetable(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+search.from_station.id+'&destId='+search.to_station.id+'&time='+search.slider_to_time+'&date='+search.date+'&format=json&context='+timetables.scrF);
-  xhr.onreadystatechange = function () {
-    var DONE = 4; // readyState 4 means the request is done.
-    var OK = 200; // status 200 is a successful return.
-    if (xhr.readyState === DONE) {
-      if (xhr.status === OK)
-        timetables.timetables = timetables.timetables.concat(JSON.parse(xhr.responseText).Trip)
-        timetables.scrF = JSON.parse(xhr.responseText).scrF
-      } else {
-        console.log('Error: ' + xhr.status); // An error occurred during the request.
-      }
-    }
-  xhr.send(null);
-}
-
-
-function before_in_timetable(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+search.from_station.id+'&destId='+search.to_station.id+'&time='+search.slider_to_time+'&date='+search.date+'&format=json&context='+timetables.scrB);
-  xhr.onreadystatechange = function () {
-    var DONE = 4; // readyState 4 means the request is done.
-    var OK = 200; // status 200 is a successful return.
-    if (xhr.readyState === DONE) {
-      if (xhr.status === OK)
-        timetables.timetables = JSON.parse(xhr.responseText).Trip.concat(timetables.timetables)
-        timetables.scrB = JSON.parse(xhr.responseText).scrB
-      } else {
-        console.log('Error: ' + xhr.status); // An error occurred during the request.
-      }
-    }
-  xhr.send(null);
-}
-
 
 // ref: http://stackoverflow.com/a/1293163/2343
 // This will parse a delimited string into an array of
