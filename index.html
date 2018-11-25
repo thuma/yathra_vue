@@ -37,7 +37,7 @@
             <button type="button" class="btn btn-secondary float-left" style="border-radius:0; border-left:0;border-right:0" v-on:click="switch_from_to">⇄</button>
             <input type="text" class="form-control" v-model="to">
             <div class="input-group-append">
-              <span class="input-group-text">To</span>
+              <span class="input-group-text" style="border-radius: 0 .25rem .25rem 0;">To</span>
               <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu-right kommun" style="display:block;">
                 <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
               </div>
