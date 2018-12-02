@@ -93,23 +93,40 @@
             <ul class="list-group" v-if="timetables.length > 0">
               <li class="list-group-item btn btn-secondary" v-on:click="before_in_timetable">
                 <div class="mx-auto" style="width: fit-content;">
-                  Earlier trips
+                  Tidigare resor
                 </div>
               </li>
               <li v-for="trip, i in timetables" class="list-group-item">
-                {{ trip.LegList.Leg[0].Origin.time }} - {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - {{ trip.duration.split("T")[1].split("H")[0] }} timmar {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} minuter - <span title="Antal byte">{{ trip.LegList.Leg.length - 1 }} ⇄</span>
-                <div v-for="leg in trip.LegList.Leg" v-if="trip.showLegs==true">
-                  {{ leg.Origin.name }} - {{ leg.Destination.name }} <br>
+                {{ trip.LegList.Leg[0].Origin.time }} - 
+                {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - 
+                <span v-if="trip.duration.indexOf('H') !== -1">
+                {{ trip.duration.split("T")[1].split("H")[0] }} timmar 
+                {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} minuter - 
+                </span>
+                <span v-if="trip.duration.indexOf('H') < 0">
+                0 timmar 
+                {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
+                </span>
+                <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
+                <div v-for="leg in trip.LegList.Leg">
+                  <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
+                    {{ leg.Origin.time }} {{ leg.Origin.name }} - 
+                    {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
+                    {{ catToIcon[leg.Product.catCode] }}
+                    <a v-bind:href="leg.Product.operatorUrl">
+                        <img class="height: 20px;" v-bind:src="'//resrobotimages.samtrafiken.se/images/'+leg.Product.operatorCode+'.jpg'">
+                    </a>
+                    </div>
                 </div>
                 <br>
                 <div class="btn-group">
-                  <button v-on:click="timetables[i].showLegs=true" type="button" class="btn btn-sm btn-secondary">⤵</button>
+                  <button v-on:click="timetables[i].showAll = true" type="button" class="btn btn-sm btn-secondary">⤵</button>
                   <button v-on:click="trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
                 </div>
               </li>
               <li class="list-group-item btn btn-secondary" v-on:click="next_in_timetable">
                 <div class="mx-auto" style="width: fit-content;" >
-                  Later trips
+                  Senare resor
                 </div>
               </li>
             </ul>
@@ -148,6 +165,16 @@ now = new Date();
 var yathra = new Vue({
   el: '#yathra',
   data:{
+    catToIcon:{
+      "1":"🚅",
+      "2":"🚆",
+      "3":"🚌",
+      "4":"🚈",
+      "5":"🚇",
+      "6":"🚋",
+      "7":"🚍",
+      "8":"⛴}"
+    },
     from:"",
     from_station: {"id":"","name":""},
     to:"",
