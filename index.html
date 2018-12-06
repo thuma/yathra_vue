@@ -187,7 +187,8 @@ var yathra = new Vue({
     scrF: "",
     timetables: [],
     trips: [],
-    areas: {}
+    areas: {},
+    price: {"oretag":{}}
   },
   methods: {
     next_in_timetable: function (e){
@@ -431,7 +432,7 @@ function CSVToArray( strData, strDelimiter ){
 }
 
 function to_station(station){
-  return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4]};
+  return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4],"x":station[5],"y":station[6]};
 }
 
 function get_stations(){
