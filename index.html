@@ -108,7 +108,7 @@
                 {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
                 </span>
                 <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
-                <div v-for="leg in trip.LegList.Leg">
+                <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops == true">
                   <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
                     {{ leg.Origin.time }} {{ leg.Origin.name }} - 
                     {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
@@ -120,7 +120,7 @@
                 </div>
                 <br>
                 <div class="btn-group">
-                  <button v-on:click="timetables[i].showAll = true" type="button" class="btn btn-sm btn-secondary">⤵</button>
+                  <button v-on:click="timetables[i].showAllStops = true" type="button" class="btn btn-sm btn-secondary">⤵</button>
                   <button v-on:click="trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
                 </div>
               </li>
@@ -137,13 +137,18 @@
             <h3 class="text-center" >Resor</h3>
             <ul class="list-group small">
               <li v-for="trip, i in trips" class="list-group-item" style="white-space: nowrap; overflow: hidden;">
-                {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} 🚉 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg[0].Origin.lat+','+trip.LegList.Leg[0].Origin.lon" target="_blank">{{ trip.LegList.Leg[0].Origin.name }}</a><br>
-                {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} 🎯 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg.slice(-1)[0].Destination.lat+','+trip.LegList.Leg.slice(-1)[0].Destination.lon" target="_blank">{{ trip.LegList.Leg.slice(-1)[0].Destination.name }}</a>
-                <br>
+                <span v-if="trip.showAllStops">
+                  {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} 🚉 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg[0].Origin.lat+','+trip.LegList.Leg[0].Origin.lon" target="_blank">{{ trip.LegList.Leg[0].Origin.name }}</a><br>
+                  {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} 🎯 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg.slice(-1)[0].Destination.lat+','+trip.LegList.Leg.slice(-1)[0].Destination.lon" target="_blank">{{ trip.LegList.Leg.slice(-1)[0].Destination.name }}</a><br>
+                </span>
+                <span v-else="" v-for="leg in trip.LegList.Leg">
+                  {{ leg.Origin.time.substring(0,5) }} 🚉 <a v-bind:href="'https://www.google.com/maps/search/'+leg.Origin.lat+','+leg.Origin.lon" target="_blank">{{ leg.Origin.name }}</a><br>
+                  {{ leg.Destination.time.substring(0,5) }} 🎯 <a v-bind:href="'https://www.google.com/maps/search/'+leg.Destination.lat+','+leg.Destination.lon" target="_blank">{{ leg.Destination.name }}</a><br>
+                </span>
                 <div class="btn-group">
                   <button class="btn btn-sm btn-secondary" v-on:click="trips.splice(i, 1)" type="button">❌</button>
                   <button class="btn btn-sm btn-secondary" v-on:click="makeICS(1, 2, trip.LegList.Leg[0].Origin.name, trip.LegList.Leg.slice(-1)[0].Destination.name, 5)" type="button">📅</button>
-                  <button v-on:click="" type="button" class="btn btn-sm btn-secondary">⤵</button>
+                  <button v-on:click="trips[i].showAllStops = 1" type="button" class="btn btn-sm btn-secondary">⤵</button>
                   <a class="btn btn-sm btn-secondary" target="_blank" v-bind:href="'https://www.'+trip.LegList.Leg[0].Product.operatorCode+'.se'" v-bind:title="trip.LegList.Leg[0].Product.operator">🎫</a>
                 </div>
               </li>
@@ -266,7 +271,11 @@ var yathra = new Vue({
         if (xhr.readyState === DONE) {
           if (xhr.status === OK) {
             console.log('Message: ' + next.timetables);
-            next.timetables = JSON.parse(xhr.responseText).Trip
+            ttable = JSON.parse(xhr.responseText).Trip
+            ttable.forEach(function(trip) {
+                trip.showAllStops = false;
+                next.timetables.push(trip);
+            })
             next.scrB = JSON.parse(xhr.responseText).scrB
             next.scrF = JSON.parse(xhr.responseText).scrF
           } else {
