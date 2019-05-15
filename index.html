@@ -247,10 +247,10 @@ var yathra = new Vue({
 		});
 	},
     getPrice: function(trip){
-	for (var i = 0; i < trip.LegList.Leg.length; i++){
-        leg = trip.LegList.Leg[i];
+	  var next = this;
+	  trip.LegList.Leg.forEach(function(leg){
 		console.log(leg)
-		if(leg.type !== "WALK" && leg.type !== "TRSF" && this.operators.indexOf(leg.Product.operatorCode) >= 0){
+		if(leg.type !== "WALK" && leg.type !== "TRSF" && next.operators.indexOf(leg.Product.operatorCode) >= 0){
 		  var search = {
 			"route": [
 				{ "stopId": leg.Origin.id },
@@ -268,7 +268,7 @@ var yathra = new Vue({
 				"latestArrival": new Date(leg.Destination.date + "T" + leg.Destination.time).toISOString().split(".")[0]+"Z"
 			}
 		  };
-          var cats = this.traveltypes[leg.Product.operatorCode];
+          var cats = next.traveltypes[leg.Product.operatorCode];
 		  var ids = Object.keys(cats);
 		  var catid = "VU";
 		  for(var j = 0; j < ids.length; j++){
@@ -278,13 +278,11 @@ var yathra = new Vue({
 		  }
 		  search.travellersPerCategory[0].cat = catid;
 
-		  var thisleg = trip.LegList.Leg[i];
-		  var thisf = this
+		  var thisleg = leg;
+		  var thisf = next
 		  postAjax("/price/"+leg.Product.operatorCode+"/api/v1/product", JSON.stringify(search), function(data){ thisf.$set(thisleg, 'price', data);});
 		  }
-		  
-		  
-		}
+		});
 	},
     next_in_timetable: function (e){
       console.log("asd");

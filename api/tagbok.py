@@ -504,8 +504,10 @@ def search():
         )
 
     url = "https://www.sj.se/#/tidtabell/"
-    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][0]["stopId"]))) + "/"
-    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][1]["stopId"]))) + "/enkel/avgang/"
+    print StopIdToName(search["route"][0]["stopId"])
+    print StopIdToName(search["route"][1]["stopId"])
+    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][0]["stopId"]).encode('utf-8'))) + "/"
+    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][1]["stopId"]).encode('utf-8'))) + "/enkel/avgang/"
     url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13] + "/avgang/"
     url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13]+"/VU--///0//"
     products = []
@@ -513,15 +515,22 @@ def search():
     for p in result.json():
       pricelist = []
       for price in p["salesCategories"]:
+        pris = float(price["totalPrice"]["value"])
+        if pris <= 200:
+            pris = pris - 25
+        elif pris <= 300:
+            pris = pris - 22
+        elif pris > 300:
+            pris = round(pris*0.946,0)
         pricelist.append({
             "productId": url,
             "productTitle": price["itineraryPriceGroupChoices"][0]["priceGroupCode"]["text"],
             "productDescription": price["flex"]["text"],
             "fares": [
                 {
-                    "amount": float(price["totalPrice"]["value"]),
+                    "amount": pris,
                     "currency": "SEK",
-                    "vatAmount": round(float(price["totalPrice"]["value"])*0.06,2),
+                    "vatAmount": round(pris*0.06,2),
                     "vatPercent": 6
                 }
             ],
