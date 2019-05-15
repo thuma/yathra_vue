@@ -115,7 +115,7 @@
                     <a v-bind:href="leg.Product.operatorUrl">
                         <img class="height: 20px;" v-bind:src="'//resrobotimages.samtrafiken.se/images/'+leg.Product.operatorCode+'.jpg'">
                     </a>
-					<span class="badge badge-primary">{{ ifprice(leg) }} SEK</span>
+					<button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">{{ ifprice(leg) }} SEK</a>
                     </div>
                 </div>
                 <br>
@@ -217,7 +217,7 @@ var yathra = new Vue({
     trips: [],
     areas: {},
     price: {"oretag":{}},
-	operators: ["74","364","642","644","480","365","374","367","821"],
+	operators: ["74","364","642","644","480","365","374","361","367","821"],
 	traveltypes: {}
   },
   methods: {
@@ -228,6 +228,23 @@ var yathra = new Vue({
 		catch(e){
 		  return "";
 		}
+	},
+    ifcode: function(leg){
+		try{
+		  return leg.price[0][0].productId;
+		}
+		catch(e){
+		  return "";
+		}
+	},
+	buy: function(operatorid,tripid){
+		var paydata = {
+			"productId": tripid,
+			"apiKey": "782db60e8f929cd84818652ac0223b4d"
+		};
+	    postAjax("/price/"+operatorid+"/api/v1/buy", JSON.stringify(paydata), function(data){
+		  window.open(data.payUrl);
+		});
 	},
     getPrice: function(trip){
 	for (var i = 0; i < trip.LegList.Leg.length; i++){

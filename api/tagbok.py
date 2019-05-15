@@ -1,7 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime
+import requests, json, sqlite3, datetime, urllib
 from bottle import get, post, run, request, response
 
 travelCats = {
@@ -27,6 +27,12 @@ def isoToTimeStamp(string):
 def StopIdToName(id):
   for row in stops.execute("SELECT stop_name FROM stops WHERE stop_id = %s" % id):
    return row[0]
+
+@post('/api/v1/buy')
+def cats():
+    response.content_type = 'application/json'
+    returndata = {"payUrl":request.json["productId"]}
+    return json.dumps(returndata)
 
 @get('/api/v1/productcat/travellers')
 def cats():
@@ -458,7 +464,7 @@ def search():
       "travelDateAsString": search["temporal"]["earliestDepature"][0:10] + " " + search["temporal"]["earliestDepature"][11:19],
       "maxNumberOfChanges": "7"
     }
-	
+    
     print query
 
     result = requests.post(
@@ -496,14 +502,20 @@ def search():
         headers=headers,
         cookies=cookies
         )
-		
+
+    url = "https://www.sj.se/#/tidtabell/"
+    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][0]["stopId"]))) + "/"
+    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][1]["stopId"]))) + "/enkel/avgang/"
+    url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13] + "/avgang/"
+    url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13]+"/VU--///0//"
     products = []
+	
     for p in result.json():
       pricelist = []
       for price in p["salesCategories"]:
-		pricelist.append({
-            "productId": p["uniqueIdentifier"],
-			"productTitle": price["itineraryPriceGroupChoices"][0]["priceGroupCode"]["text"],
+        pricelist.append({
+            "productId": url,
+            "productTitle": price["itineraryPriceGroupChoices"][0]["priceGroupCode"]["text"],
             "productDescription": price["flex"]["text"],
             "fares": [
                 {
