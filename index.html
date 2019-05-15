@@ -104,18 +104,18 @@
                 {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} minuter - 
                 </span>
                 <span v-if="trip.duration.indexOf('H') < 0">
-                0 timmar 
                 {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
                 </span>
                 <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
-                <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops == true">
+                <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops == true || true">
                   <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
                     {{ leg.Origin.time }} {{ leg.Origin.name }} - 
                     {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
-                    {{ catToIcon[leg.Product.catCode] }}
+                    {{ catToIcon[leg.Product.catCode] }} </span>
                     <a v-bind:href="leg.Product.operatorUrl">
                         <img class="height: 20px;" v-bind:src="'//resrobotimages.samtrafiken.se/images/'+leg.Product.operatorCode+'.jpg'">
                     </a>
+					<span class="badge badge-primary">{{ ifprice(leg) }} SEK</span>
                     </div>
                 </div>
                 <br>
@@ -159,6 +159,29 @@
     </div>
   </body>
   <script>
+  
+function postAjax(url, data, success) {
+    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    xhr.open('POST', url);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState>3 && xhr.status==200) { success(JSON.parse(xhr.responseText)); }
+    };
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(data);
+    return xhr;
+}
+
+function getAjax(url, success) {
+    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+	xhr.open('GET', url);
+	xhr.onload = function() {
+		if ( xhr.readyState>3 && xhr.status === 200) {
+			success(JSON.parse(xhr.responseText));
+		}
+	};
+xhr.send();
+}
 
 function slider_to_time_conv(slider){
       var hours = Math.floor(slider / 60);
@@ -193,9 +216,59 @@ var yathra = new Vue({
     timetables: [],
     trips: [],
     areas: {},
-    price: {"oretag":{}}
+    price: {"oretag":{}},
+	operators: ["74","364","642","644","480","365","374","367","821"],
+	traveltypes: {}
   },
   methods: {
+    ifprice: function(leg){
+		try{
+		  return leg.price[0][0].fares[0].amount;
+		}
+		catch(e){
+		  return "";
+		}
+	},
+    getPrice: function(trip){
+	for (var i = 0; i < trip.LegList.Leg.length; i++){
+        leg = trip.LegList.Leg[i];
+		console.log(leg)
+		if(leg.type !== "WALK" && leg.type !== "TRSF" && this.operators.indexOf(leg.Product.operatorCode) >= 0){
+		  var search = {
+			"route": [
+				{ "stopId": leg.Origin.id },
+				{ "stopId": leg.Destination.id }
+			],
+			"travellersPerCategory": [
+				{
+					"cat": "VU",
+					"tra": 1,
+					"age": 35
+				}
+			],
+			"temporal": {
+				"earliestDepature": new Date(leg.Origin.date + "T" + leg.Origin.time).toISOString().split(".")[0]+"Z",
+				"latestArrival": new Date(leg.Destination.date + "T" + leg.Destination.time).toISOString().split(".")[0]+"Z"
+			}
+		  };
+          var cats = this.traveltypes[leg.Product.operatorCode];
+		  var ids = Object.keys(cats);
+		  var catid = "VU";
+		  for(var j = 0; j < ids.length; j++){
+			if(cats[ids[j]].indexOf("Vuxen") >= 0){
+			  catid = ids[j];
+			}
+		  }
+		  search.travellersPerCategory[0].cat = catid;
+
+		  var thisleg = trip.LegList.Leg[i];
+		  var thisf = this
+		  postAjax("/price/"+leg.Product.operatorCode+"/api/v1/product", JSON.stringify(search), function(data){ thisf.$set(thisleg, 'price', data);});
+		  }
+		  
+		  
+		}
+	},
     next_in_timetable: function (e){
       console.log("asd");
       var xhr = new XMLHttpRequest();
@@ -262,6 +335,7 @@ var yathra = new Vue({
       this.from_station = to_station;
     },
     find_in_timetable: function (){
+	  this.timetables = [];
       var xhr = new XMLHttpRequest();
       xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json');
       var next = this
@@ -275,6 +349,7 @@ var yathra = new Vue({
             ttable.forEach(function(trip) {
                 trip.showAllStops = false;
                 next.timetables.push(trip);
+				next.getPrice(trip);
             })
             next.scrB = JSON.parse(xhr.responseText).scrB
             next.scrF = JSON.parse(xhr.responseText).scrF
@@ -321,6 +396,14 @@ var yathra = new Vue({
         "END:VCALENDAR";
      window.open( "data:text/calendar;charset=utf8," + escape(calendar));
      }
+  },
+  created: function() {
+    var then = this;
+	this.operators.forEach(function(operator){
+	    getAjax("/price/" + operator + "/api/v1/productcat/travellers", function(data){
+		   then.traveltypes[operator] = data;
+		});
+	});
   },
   computed: {
     slider_to_time: function (){

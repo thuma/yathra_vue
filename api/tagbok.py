@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import requests, json, sqlite3, datetime
-from bottle import get, post, run, request
+from bottle import get, post, run, request, response
 
 travelCats = {
-  "VU":"Vuxen 26-64",
-  "BO1":"Barn 0-1 år",
-  "BO16":"Barn 2-16 år",
-  "BO26":"Ungdom 17-25 år",
-  "SU":"Student 26+",
-  "PS":"Pensionär 65+", 
-  "SE":"Senior 65+"
+  "VU":"Vuxen",
+  "BO":"Barn/Ungdom",
+  "SU":"Student",
+  "PS":"Pensionär",
+  "SE":"Senior"
 }
 
 stops = sqlite3.connect('stops')
@@ -32,9 +30,10 @@ def StopIdToName(id):
 
 @get('/api/v1/productcat/travellers')
 def cats():
+    response.content_type = 'application/json'
     return json.dumps(travelCats)
 
-@post('/api/v1/productcat/product')
+@post('/api/v1/product')
 def search():
     search = request.json
     #search = {
@@ -56,8 +55,8 @@ def search():
     #}
 
     cookies = {
-        "JSESSIONID":"ty-TVr5eXRpPxCB_ypbmDaBOFz0Zajz1AH4EazPR.f868c9f42601",
-        "JSESSIONID":"ty-TVr5eXRpPxCB_ypbmDaBOFz0Zajz1AH4EazPR.d61b543d27d7"
+        "JSESSIONID":"JM8FYi8KwdpksuInW5PA95ToS2X255OxpQ75q1YB.f868c9f42601",
+        "JSESSIONID":"56Xhp0fuxNYTixfMavvyYxUI3c90FO4cqRM9etAR.f868c9f42601"
         }
     headers = {
       'content-type': 'application/json',
@@ -455,10 +454,12 @@ def search():
           "selected": True
         }
       ],
-      "travelDate": search["temporal"]["earliestDepature"],
-      "travelDateAsString": search["temporal"]["earliestDepature"][0:10] + " " + search["temporal"]["earliestDepature"][12:19],
+      "travelDate": search["temporal"]["earliestDepature"][:-1]+".000Z",
+      "travelDateAsString": search["temporal"]["earliestDepature"][0:10] + " " + search["temporal"]["earliestDepature"][11:19],
       "maxNumberOfChanges": "7"
     }
+	
+    print query
 
     result = requests.post(
         "https://www.tagbokningen.se/will/api/rest/timetable/searchTimetable",
@@ -518,6 +519,7 @@ def search():
             "travellersPerCategory": search["travellersPerCategory"]
         })
       products.append(pricelist)
+    response.content_type = 'application/json'
     return json.dumps(products)
 
 run(host='0.0.0.0', port=8080, reloader=True)
