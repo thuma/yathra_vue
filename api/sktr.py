@@ -1,7 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime, urllib, xmltodict, rt90
+import requests, json, sqlite3, datetime, urllib, rt90
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
 
