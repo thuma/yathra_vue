@@ -294,7 +294,12 @@ var yathra = new Vue({
         var OK = 200; // status 200 is a successful return.
         if (xhr.readyState === DONE) {
           if (xhr.status === OK)
-            next.timetables = next.timetables.concat(JSON.parse(xhr.responseText).Trip)
+            var newData = JSON.parse(xhr.responseText).Trip
+            newData.forEach(function(trip) {
+                trip.showAllStops = false;
+				next.getPrice(trip);
+            })
+            next.timetables = next.timetables.concat(newData)
             next.scrF = JSON.parse(xhr.responseText).scrF
           } else {
             console.log('Error: ' + xhr.status); // An error occurred during the request.
@@ -312,8 +317,12 @@ var yathra = new Vue({
         var OK = 200; // status 200 is a successful return.
         if (xhr.readyState === DONE) {
           if (xhr.status === OK)
-            next.timetables = JSON.parse(xhr.responseText).Trip.concat(next.timetables)
-            console.log(next.timetables.lenght);
+            var newData = JSON.parse(xhr.responseText).Trip
+            newData.forEach(function(trip) {
+                trip.showAllStops = false;
+				next.getPrice(trip);
+            })
+            next.timetables = newData.concat(next.timetables)
             next.scrB = JSON.parse(xhr.responseText).scrB
           } else {
             console.log('Error: ' + xhr.status); // An error occurred during the request.

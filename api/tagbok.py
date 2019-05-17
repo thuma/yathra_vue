@@ -723,8 +723,6 @@ def search():
       "travelDateAsString": search["temporal"]["earliestDepature"][0:10] + " " + search["temporal"]["earliestDepature"][11:19],
       "maxNumberOfChanges": "7"
     }
-    
-    print query
 
     result = requests.post(
         "https://www.tagbokningen.se/will/api/rest/timetable/searchTimetable",
@@ -763,8 +761,6 @@ def search():
         )
 
     url = "https://www.sj.se/#/tidtabell/"
-    print StopIdToName(search["route"][0]["stopId"])
-    print StopIdToName(search["route"][1]["stopId"])
     url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][0]["stopId"]).encode('utf-8'))) + "/"
     url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][1]["stopId"]).encode('utf-8'))) + "/enkel/avgang/"
     url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13] + "/avgang/"
