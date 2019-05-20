@@ -1,10 +1,11 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime, urllib
+import requests, json, sqlite3, datetime, urllib, math
 from flixstops import stops
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
+from urllib import urlencode
 
 travelCats = {
     "adult":"Vuxen",
@@ -12,16 +13,30 @@ travelCats = {
     "bike_slot":"Cyklar"
 }
 
+db = sqlite3.connect("stops")
+
 localstops = []
 for stop in stops:
   newstop = {"name":stop["name"],"id":stop["id"],"lon":float(stop["lon"]),"lat":float(stop["lat"])}
   if newstop["lat"] > 54.6126051 and newstop["lon"] > 7.5128732 and newstop["lon"] < 26.1078057:
     localstops.append(newstop)
 
-print localstops
-
 def TimeStampToIso(tstamp):
   return datetime.datetime.fromtimestamp(tstamp).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def isoToFlexdate(string):
+  try:
+    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
+  except:
+    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
+  return utc_dt.strftime("%d.%m.%Y")
+
+def isoToDate(string):
+  try:
+    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
+  except:
+    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
+  return utc_dt.strftime("%Y-%m-%d")
 
 def isoToTimeStamp(string):
   try:
@@ -34,8 +49,24 @@ def stringToUnixTS(string):
   utc_dt = parser.parse(string).astimezone(tz.tzutc());
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
+def distanse(locationa,locationb):
+  return math.sqrt(
+  	abs(locationa['lon']-locationb['lon']) + 
+  	abs(locationa['lat']-locationb['lat'])
+  	)
+
 def StopIdToName(id):
-  return stops[id]
+  current = {"dist":9999999}
+  for row in db.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
+    position = {
+    	"lat":float(row[0]),
+    	"lon":float(row[1])
+    }
+    for stop in localstops:
+      stop["dist"] = distanse(position,stop)
+      if current["dist"] > stop["dist"]:
+        current = stop
+  return current
 
 @post('/api/v1/buy')
 def cats():
@@ -69,41 +100,40 @@ def search():
     #    }
     #}
 
-    headers = {
-      'content-type': 'application/json',
-      'accept': 'application/json, text/plain, */*'
-      }
-    query = {
-        "origin_id":StopIdToName(search["route"][0]["stopId"]),
-        "destination_id":StopIdToName(search["route"][1]["stopId"]),
-        "date":search["temporal"]["earliestDepature"][0:10],
-        "passengers":[1],
-        "has_stroller":False,
-        "has_pet":False,
-        "wheelchairs":0
+    params = {
+        "departureCity":StopIdToName(search["route"][0]["stopId"])["id"],
+        "arrivalCity":StopIdToName(search["route"][1]["stopId"])["id"],
+        "rideDate":isoToFlexdate(search["temporal"]["earliestDepature"]),
+        "_locale":"en"
     }
+    
+    print params
+    
+    for traveller in search["travellersPerCategory"]:
+        params[traveller['cat']] = traveller['tra']
 
-    result = requests.post(
-        "https://api.mtrexpress.travel/api/v1.0/departures/",
-        data=json.dumps(query),
-        headers=headers
+    result = requests.get(
+        "https://shop.flixbus.se/search",
+        params=params
         )
-
+    
+    jsondata = result.content.split("$('#search-results-wrapper').searchResultFilters(")[1].split("});")[0]
+    jsondata = jsondata.split("searchResults:")[1].split("\n")[0].strip()[:-1]
     trips = []
-    for trip in result.json():
-        if stringToUnixTS(trip["departure_at"]) >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["arrival_at"]) <= stringToUnixTS(search["temporal"]["latestArrival"]):
+    for trip in json.loads(jsondata)["ridesData"]["direct"]["rides"][isoToDate(search["temporal"]["earliestDepature"])]:
+        if trip["departure"] >= stringToUnixTS(search["temporal"]["earliestDepature"]) and trip["arrival"] <= stringToUnixTS(search["temporal"]["latestArrival"]):
             trips.append(trip)
     
     products = []
     for trip in trips:
       pricelist = []
-      url = "https://mtrexpress.travel/sv/boka-resa?from="+trip["origin"]["name"]+"&to="+trip["destination"]["name"]+"&date="+trip["departure_at"][0:10]+"&adults=1&show=departures"
-      for type in ["FIX","FLEX","PLUS"]:
-        pris = float(trip["prices"][type])
+      url = "https://shop.flixbus.se/search?"+urlencode(params);
+      for type in ["one"]:
+        pris = float(trip["price"])
         pricelist.append({
             "productId": url,
-            "productTitle": type,
-            "productDescription": type + " Biljett",
+            "productTitle": "Lägsta pris",
+            "productDescription": "Enkel biljett",
             "fares": [
                 {
                     "amount": pris,
@@ -113,7 +143,7 @@ def search():
                 }
             ],
             "productProperties": {
-                "date": trip["departure_at"]
+                "date": trip["departureDateTime"]
             },
             "travellersPerCategory": search["travellersPerCategory"]
         })
