@@ -15,6 +15,12 @@ stops = sqlite3.connect('stops')
 
 def TimeStampToIso(tstamp):
   return datetime.datetime.fromtimestamp(tstamp).strftime("%Y-%m-%dT%H:%M:%SZ")
+  
+def utcIsoToLocalSktrDate(datedate):
+   return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%Y-%m-%d")
+ 
+def utcIsoToLocalSktrTime(datedate):
+   return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%H:%M")
 
 def GetFirstValue(data, field):
     try:
@@ -80,22 +86,23 @@ def search():
     #}
     
     parms = {
-            "cmdaction":"next",
+            "cmdaction":"search",
             "selPointFr":"A|"+StopIdToName(search["route"][0]["stopId"])+"|0",
             "selPointTo":"B|"+StopIdToName(search["route"][1]["stopId"])+"|0",
-            "LastStart":search["temporal"]["earliestDepature"].replace("T"," ")[0:16]
+            "inpTime":utcIsoToLocalSktrTime(search["temporal"]["earliestDepature"]),
+            "inpDate":utcIsoToLocalSktrDate(search["temporal"]["earliestDepature"])
             }
+    print "http://www.labs.skanetrafiken.se/v2.2/resultspage.asp?"+ urllib.urlencode(parms)
     result = requests.get(
         "http://www.labs.skanetrafiken.se/v2.2/resultspage.asp",
         params= parms
         )
-
     trips = []
     for trip in result.content.split("<Journey>"):
         if GetFirstValue(trip,"DepDateTime") <> "" and stringToUnixTS(GetFirstValue(trip,"DepDateTime")+"+02:00")+600 >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(GetFirstValue(trip,"ArrDateTime")+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"])+600:
             trips.append(trip)
+   
     products = []
-    
     find = {
         "VU":"Jojo Reskassa Vuxen",
         "BA":"Jojo Reskassa Barn",
