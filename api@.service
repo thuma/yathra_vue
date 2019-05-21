@@ -1,0 +1,13 @@
+[Unit]
+Description=TravelAPIRunner for %1
+After=network.target
+
+[Service]
+Type=simple
+User=yathra
+WorkingDirectory=/home/yathra/public/api
+ExecStart=python %1.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

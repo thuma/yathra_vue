@@ -42,6 +42,13 @@ def isoToTimeStamp(string):
   except:
     utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
   return (utc_dt - datetime.datetime(1970, 1, 1)).total_seconds()
+  
+def isoToTimeStampNB(string):
+  try:
+    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
+  except:
+    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
+  return (utc_dt - datetime.datetime(1970, 1, 1)).total_seconds()-(3600*2)
 
 def stringToUnixTS(string):
   utc_dt = parser.parse(string).astimezone(tz.tzutc());
@@ -110,9 +117,8 @@ def search():
     
     trips = []
     for trip in json.loads(result.json())["VisibleJourneys"]:
-        print trip
-        if isoToTimeStamp(trip["PlannedDeparture"]) >= stringToUnixTS(search["temporal"]["earliestDepature"]) and isoToTimeStamp(trip["PlannedArrival"]) <= stringToUnixTS(search["temporal"]["latestArrival"]):
-            print trip
+        if isoToTimeStampNB(trip["PlannedDeparture"]) >= stringToUnixTS(search["temporal"]["earliestDepature"]) and isoToTimeStampNB(trip["PlannedArrival"]) <= stringToUnixTS(search["temporal"]["latestArrival"]):
+            trips.append(trip)
     
     products = []
     for trip in trips:
