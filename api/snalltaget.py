@@ -1,9 +1,9 @@
-snalltaget
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime, urllib
+import requests, json, sqlite3, datetime, urllib, dateutil
 from bottle import get, post, run, request, response
+from dateutil import parser, tz
 
 travelCats = {
   "VU":"Vuxen",
@@ -27,6 +27,10 @@ def StopIdToName(id):
     return stopids[id].decode("utf-8")
   for row in stops.execute("SELECT stop_name FROM stops WHERE stop_id = %s" % id):
    return row[0]
+
+def stringToUnixTS(string):
+  utc_dt = parser.parse(string).astimezone(tz.tzutc());
+  return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
 @post('/api/v1/buy')
 def cats():
@@ -59,70 +63,82 @@ def search():
     #        "latestArrival": "2019-07-01T16:05:00Z" 
     #    }
     #}
-
-    headers = {
-      'content-type': 'application/json'
-      }
-    query = {
-      }
-
-    result = requests.post(
-        "https://www.tagbokningen.se/will/api/rest/timetable/searchTimetable",
-        data=json.dumps(query),
-        headers=headers,
-        cookies=cookies
-        )
-
-    trips = []
-    for j in result.json()["journeyAdvices"]:
-      if j["departureDateTime"]/1000 >= isoToTimeStamp(search["temporal"]["earliestDepature"]):
-        if j["arrivalDateTime"]/1000 <= isoToTimeStamp(search["temporal"]["latestArrival"]):
-          trips.append(j)
-
+ 
     travelers = []
     for traveler in search["travellersPerCategory"]:
       for a in range(traveler["tra"]):
         travelers.append({
-          "travellerCategory": {
-            "value": traveler["cat"]
-          },
-          "travellerAge": traveler["age"],
-          "travellerAgeRange": False
+          "travellerCategory":traveler["cat"]
         })
+   
+    query = {
+        "departureLocationId":int(search["route"][0]["stopId"][2:]),
+        "departureLocationProducerCode":int(search["route"][0]["stopId"][0:2]),
+        "arrivalLocationId":int(search["route"][1]["stopId"][2:]),
+        "arrivalLocationProducerCode":int(search["route"][1]["stopId"][0:2]),
+        "departureDateTime":search["temporal"]["earliestDepature"][0:10]+" 00:00",
+        "travelType":"T",
+        "promotionCode":"null",
+        "passengers":travelers
+    }
+    
+    print query;
+      
+    headers = {
+      'Content-type': 'application/json;charset=UTF-8',
+      'Accept': 'application/json, text/plain, */*',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36',
+           }
+  
+    tokendata = requests.get("https://www.snalltaget.se/",headers=headers)
+    headers['Authorization'] = "Bearer "+tokendata.content.split("window.Bokning.ApiToken")[1].split("'")[1]
+    
+    result = requests.post(
+        "https://www.snalltaget.se/api/timetables",
+        data=json.dumps(query).replace('"null"',"null"),
+        headers=headers,
+        )
+    trips = []
+    refs = []
+    for j in result.json()["journeyAdvices"]:
+      if stringToUnixTS(j["departureDateTime"]) >= isoToTimeStamp(search["temporal"]["earliestDepature"]):
+        if stringToUnixTS(j["arrivalDateTime"]) <= isoToTimeStamp(search["temporal"]["latestArrival"]):
+          trips.append(j)
+          refs.append(j["journeyConnectionReference"])
+
+    print trips
 
     price = {
-      "journeyAdvices": trips,
-      "travellers": travelers
+        "timetableId":result.json()["id"],
+        "journeyConnectionReferences":refs
     }
-
+    
+    print json.dumps(price)
+ 
     result = requests.post(
-        "https://www.tagbokningen.se/will/api/rest/gts/getPrice",
+        "https://www.snalltaget.se/api/journeyadvices/lowestprices",
         data=json.dumps(price),
         headers=headers,
-        cookies=cookies
         )
 
-    url = "https://www.sj.se/#/tidtabell/"
-    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][0]["stopId"]).encode('utf-8'))) + "/"
-    url = url + urllib.quote(urllib.quote(StopIdToName(search["route"][1]["stopId"]).encode('utf-8'))) + "/enkel/avgang/"
-    url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13] + "/avgang/"
-    url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13]+"/VU--///0//"
-    products = []
-	
+    params = {
+        "from": query["departureLocationId"],
+        "to": query["arrivalLocationId"],
+        "t": "T",
+        "date": search["temporal"]["earliestDepature"][0:10]+"T00:00:00", 
+        "rdate": search["temporal"]["earliestDepature"][0:10]+"T00:00:00",
+        "rt": "VU",
+        "ra": -1
+    }
+    print result.content
+    products = []	
     for p in result.json():
       pricelist = []
-      for price in p["salesCategories"]:
-        pris = float(price["totalPrice"]["value"])
-        if pris <= 200:
-            pris = pris - 25
-        elif pris <= 300:
-            pris = pris - 22
-        elif pris > 300:
-            pris = round(pris*0.946,0)
-        pricelist.append({
-            "productId": url,
-            "productTitle": price["itineraryPriceGroupChoices"][0]["priceGroupCode"]["text"],
-            "productDescription": price["flex"]["text"],
+      pris = float(p["lowestTotalPrice"])
+      pricelist.append({
+            "productId": "specialID",
+            "productTitle": "Lägsta pris",
+            "productDescription": "Lägsta mjliga pris",
             "fares": [
                 {
                     "amount": pris,
@@ -132,14 +148,13 @@ def search():
                 }
             ],
             "productProperties": {
-                "date": TimeStampToIso(p["departureDateTime"]/1000)
+                "date": search["temporal"]["earliestDepature"]
             },
             "travellersPerCategory": search["travellersPerCategory"]
-        })
+      })
       products.append(pricelist)
     response.content_type = 'application/json'
     return json.dumps(products)
 
 run(host='0.0.0.0', port=8085, reloader=True)
 
-curl 'https://www.snalltaget.se/api/timetables' -H 'Content-Type: application/json;charset=UTF-8' --data-binary '{"departureLocationId":1,"departureLocationProducerCode":74,"arrivalLocationId":3,"arrivalLocationProducerCode":74,"departureDateTime":"2019-05-30 00:00","travelType":"T","promotionCode":null,"passengers":[{"passengerAge":null,"passengerCategory":"VU"}]}' --compressed
