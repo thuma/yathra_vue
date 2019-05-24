@@ -5,7 +5,7 @@ import requests, json, sqlite3, datetime, urllib, math
 from flixstops import stops
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
-from urllib import urlencode
+from urllib import urlencode, quote_plus
 
 travelCats = {
     "adult":"Vuxen",
@@ -71,7 +71,7 @@ def StopIdToName(id):
 @post('/api/v1/buy')
 def cats():
     response.content_type = 'application/json'
-    returndata = {"payUrl":request.json["productId"]}
+    returndata = {"payUrl":"https://tc.tradetracker.net/?c=26525&m=12&a=350004&u="+quote_plus(request.json["productId"])}
     return json.dumps(returndata)
 
 @get('/api/v1/productcat/travellers')
