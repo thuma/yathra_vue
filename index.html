@@ -96,7 +96,7 @@
                   Tidigare resor
                 </div>
               </li>
-              <li v-for="trip, i in timetables" class="list-group-item">
+              <li v-for="trip, i in lowprice" class="list-group-item">
                 {{ trip.LegList.Leg[0].Origin.time }} - 
                 {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - 
                 <span v-if="trip.duration.indexOf('H') !== -1">
@@ -105,6 +105,9 @@
                 </span>
                 <span v-if="trip.duration.indexOf('H') < 0">
                 {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
+                </span>
+                <span v-if="totallowestprice(trip) < 999999">
+                {{ totallowestprice(trip) }} SEK -
                 </span>
                 <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
                 <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops == true || true">
@@ -232,6 +235,20 @@ var yathra = new Vue({
 	traveltypes: {}
   },
   methods: {
+    totallowestprice: function(trip){
+      var total = 0;
+      try{
+        trip.LegList.Leg.forEach(function(leg){
+          if(leg.type !== "WALK" && leg.type !== "TRSF"){
+            total += leg.price[0][0].fares[0].amount;
+          }
+        });
+      } catch(e){
+        console.log(e);
+        total += 999999
+      }
+      return total
+    },
     operatorUrlById: function(id){
 		try{
 		  return this.alloperators[id]["url"];
@@ -457,6 +474,19 @@ var yathra = new Vue({
 	});
   },
   computed: {
+    lowprice: function(){
+    var main = this;
+    function compare(a, b) {
+      av = main.totallowestprice(a)
+      bv = main.totallowestprice(b)
+      if (av < bv)
+        return -1;
+      if (av > bv)
+        return 1;
+      return 0
+      }
+      return this.timetables.slice().sort(compare);
+    },
     slider_to_time: function (){
       return slider_to_time_conv(this.time_slider);
     },
