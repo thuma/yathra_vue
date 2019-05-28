@@ -16,10 +16,13 @@ stops = sqlite3.connect('stops')
 def TimeStampToIso(tstamp):
   return datetime.datetime.fromtimestamp(tstamp).strftime("%Y-%m-%dT%H:%M:%SZ")
   
-def utcIsoToLocalSktrDate(datedate):
+def utcIsoToLocalKltDateTime(datedate):
+  return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:30")
+
+def utcIsoToLocalKltDate(datedate):
    return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%Y-%m-%d")
  
-def utcIsoToLocalSktrTime(datedate):
+def utcIsoToLocalKltTime(datedate):
    return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%H:%M")
 
 def GetFirstValue(data, field):
@@ -81,24 +84,25 @@ def search():
     #}
     fromdata = StopIdToData(search["route"][0]["stopId"])
     todata = StopIdToData(search["route"][-1]["stopId"])
+    
     data = {
         "withinkalmar":"true",
         "travelfrom[Id]":fromdata["id"],
         "travelfrom[Name]":fromdata["name"],
         "travelfrom[PointTypeId]":"0",
         "travelfrom[CustomFields]":"",
-        "travelfrom[Coordinate][X]":fromdata["Y"],
+        "travelfrom[Coordinate][X]":fromdata["X"],
         "travelfrom[Coordinate][Y]":fromdata["Y"],
-        "travelto[Id]":"302001",
-        "travelto[Name]":"Alvesta",
+        "travelto[Id]":todata["id"],
+        "travelto[Name]":todata["name"],
         "travelto[PointTypeId]":"0",
         "travelto[CustomFields]":"",
-        "travelto[Coordinate][X]":"56.8989526025308",
-        "travelto[Coordinate][Y]":"14.5572810453009",
-        "traveldate":"05/27/2019 10:37:30",
-        "traveltime":"05/27/2019 10:37:30",
-        "shorttraveldate":"2019-05-27",
-        "shorttraveltime":"10:37",
+        "travelto[Coordinate][X]":todata["X"],
+        "travelto[Coordinate][Y]":todata["Y"],
+        "traveldate":utcIsoToLocalKltDate(search["temporal"]["earliestDepature"]),
+        "traveltime":utcIsoToLocalKltDateTime(search["temporal"]["earliestDepature"]),
+        "shorttraveldate":utcIsoToLocalKltDate(search["temporal"]["earliestDepature"]),
+        "shorttraveltime":utcIsoToLocalKltTime(search["temporal"]["earliestDepature"]),
         "traveltypelist[0][Disabled]":"false",
         "traveltypelist[0][Group]":"",
         "traveltypelist[0][Selected]":"true",
@@ -131,31 +135,32 @@ def search():
         "travelfilterlist[4][DefaultChecked]":"true",
         "travelfilterlist[4][Checked]":"true"
     }
+
     headers = {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"} 
     result = requests.post(
-        "https://www.kalmarlanstrafik.se/api/TravelPlannerApi/GetJourney"   headers = headers,
-        data= data,
-        headers = headers
+        "https://www.kalmarlanstrafik.se/api/TravelPlannerApi/GetJourney",
+        data=data,
+        headers=headers
         )
-
+        
     trips = []
-    for trip in result.content.split("<Journey>"):
-        if GetFirstValue(trip,"DepDateTime") <> "" and stringToUnixTS(GetFirstValue(trip,"DepDateTime")+"+02:00")+600 >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(GetFirstValue(trip,"ArrDateTime")+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"])+600:
+    for trip in result.json():
+        if stringToUnixTS(trip["DepDateTime"]+"+02:00") >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["ArrDateTime"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"]):
             trips.append(trip)
    
     products = []
     find = {
-        "VU":"Jojo Reskassa Vuxen",
-        "BA":"Jojo Reskassa Barn",
-        "DU":"Jojo Reskassa Duo/Familj"
+        "VU":"Reskassa Vuxen",
+        "BA":"Reskassa Barn",
+        "DU":"Reskassa Duo/Familj"
         }
     for trip in trips:
+        pdata = trip['Prices'][0]["PriceItems"][0]["PriceTravel"]
         pricelist = []
-        start = GetFirstValue(trip,"DepDateTime")
-        url = "https://www.skanetrafiken.se/om-oss/ladda-ner-appen/"
-        prisd = trip.split(find[search["travellersPerCategory"][0]["cat"]])[1]
-        pris = float(GetFirstValue(prisd,"Price"))
-        vat = float(GetFirstValue(prisd,"VAT"))
+        start = trip["DepDateTime"]
+        url = "https://www.kalmarlanstrafik.se/priser-och-produkter/"
+        pris = float(pdata.split(" ")[0].replace(",","."))
+        vat = pris*0.06
         pricelist.append({
             "productId": url,
             "productTitle": "Enkelbiljett",
