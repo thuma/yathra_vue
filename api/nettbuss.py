@@ -60,7 +60,7 @@ def StopIdToName(id):
 @post('/api/v1/buy')
 def cats():
     response.content_type = 'application/json'
-    returndata = {"payUrl":request.json["productId"]}
+    returndata = {"payUrl":"https://track.adtraction.com/t/t?a=1213626540&as=1332239618&t=2&tk=1&url="+request.json["productId"]}
     return json.dumps(returndata)
 
 @get('/api/v1/productcat/travellers')
@@ -125,7 +125,7 @@ def search():
       pricelist = []
       
       
-      url = "https://www.nettbuss.se/boka/#!/2/"+query["OriginBusStopId"]+"/"+query["DestinationBusStopId"]+"/"+query["DepartureDate"]+"/0/"+query["FareClassSelections"]+"/";
+      url = "http://www.nettbuss.se/boka/#!/2/"+query["OriginBusStopId"]+"/"+query["DestinationBusStopId"]+"/"+query["DepartureDate"]+"/0/"+query["FareClassSelections"]+"/";
       for type in trip["Options"]:
         pris = float(type['Price'])
         pricelist.append({

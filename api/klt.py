@@ -154,8 +154,14 @@ def search():
         "BA":"Reskassa Barn",
         "DU":"Reskassa Duo/Familj"
         }
+    
+    findindex = {
+        "VU":0,
+        "BA":1,
+        "DU":2
+        }
     for trip in trips:
-        pdata = trip['Prices'][0]["PriceItems"][0]["PriceTravel"]
+        pdata = trip['Prices'][0]["PriceItems"][findindex[search["travellersPerCategory"][0]["cat"]]]["PriceTravel"]
         pricelist = []
         start = trip["DepDateTime"]
         url = "https://www.kalmarlanstrafik.se/priser-och-produkter/"
