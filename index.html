@@ -118,7 +118,7 @@
                     <span title="Pris" v-if="totallowestprice(trip) < 999999">
                     {{ totallowestprice(trip) }} SEK -
                     </span>
-                    <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
+                    <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} </span>
                 </span>
                 <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
                   <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
@@ -216,10 +216,19 @@ var yathra = new Vue({
     trips: [],
     areas: {},
     price: {"oretag":{}},
-	operators: ["74","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357"],
+	operators: ["74","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
 	traveltypes: {}
   },
   methods: {
+    changes(legs){
+      var count = -1
+      legs.forEach(function(leg){
+        if(leg.type !== "WALK" && leg.type !== "TRSF"){
+            count++;
+        }
+      })
+      return count
+    },
     detailsToggle: function(trip){
        if (trip.showAllStops){
           trip.showAllStops = false;
