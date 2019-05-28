@@ -87,30 +87,33 @@
             </ul>
           </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-9">
           <div>
             <h3 class="text-center" >Söksvar</h3>
             <ul class="list-group" v-if="timetables.length > 0">
               <li class="list-group-item btn btn-secondary" v-on:click="before_in_timetable">
                 <div class="mx-auto" style="width: fit-content;">
-                  Tidigare resor
+                  Sök resor före {{ timetablesFirstTime }}
                 </div>
               </li>
               <li v-for="trip, i in lowprice" class="list-group-item">
-                {{ trip.LegList.Leg[0].Origin.time }} - 
-                {{ trip.LegList.Leg.slice(-1)[0].Destination.time }} - 
-                <span v-if="trip.duration.indexOf('H') !== -1">
-                {{ trip.duration.split("T")[1].split("H")[0] }} timmar 
-                {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} minuter - 
+                <span v-on:click="detailsToggle(trip)">
+                    {{ travelDate(trip) }}
+                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} - 
+                    {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} - 
+                    <span v-if="trip.duration.indexOf('H') !== -1">
+                    {{ trip.duration.split("T")[1].split("H")[0] }} h
+                    {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} m - 
+                    </span>
+                    <span v-if="trip.duration.indexOf('H') < 0">
+                    {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
+                    </span>
+                    <span title="Pris" v-if="totallowestprice(trip) < 999999">
+                    {{ totallowestprice(trip) }} SEK -
+                    </span>
+                    <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
                 </span>
-                <span v-if="trip.duration.indexOf('H') < 0">
-                {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
-                </span>
-                <span v-if="totallowestprice(trip) < 999999">
-                {{ totallowestprice(trip) }} SEK -
-                </span>
-                <span title="Antal byte">⇄ {{ trip.LegList.Leg.length - 1 }} </span>
-                <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops == true || true">
+                <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
                   <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
                     {{ leg.Origin.time }} {{ leg.Origin.name }} - 
                     {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
@@ -119,17 +122,15 @@
                         <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
                     </a>
 					<button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">{{ ifprice(leg) }} SEK</a>
-                    </div>
+                  </div>
                 </div>
-                <br>
-                <div class="btn-group">
-                  <button v-on:click="timetables[i].showAllStops = true" type="button" class="btn btn-sm btn-secondary">⤵</button>
-                  <button v-on:click="trips.push(trip);store_trips();" type="button" class="btn btn-sm btn-secondary">💾</button>
+                <div class="btn-group" v-if="trip.showAllStops">
+                  <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
                 </div>
               </li>
               <li class="list-group-item btn btn-secondary" v-on:click="next_in_timetable">
                 <div class="mx-auto" style="width: fit-content;" >
-                  Senare resor
+                  Sök resor efter {{ timetablesLastTime }}
                 </div>
               </li>
             </ul>
@@ -143,29 +144,6 @@
                 <img style="height: 20px; margin:7px;"  v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
               </a>
             </p>
-          </div>
-        </div>
-        <div class="col-lg-3">
-          <div>
-            <h3 class="text-center" >Resor</h3>
-            <ul class="list-group small">
-              <li v-for="trip, i in trips" class="list-group-item" style="white-space: nowrap; overflow: hidden;">
-                <span v-if="trip.showAllStops">
-                  {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} 🚉 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg[0].Origin.lat+','+trip.LegList.Leg[0].Origin.lon" target="_blank">{{ trip.LegList.Leg[0].Origin.name }}</a><br>
-                  {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} 🎯 <a v-bind:href="'https://www.google.com/maps/search/'+trip.LegList.Leg.slice(-1)[0].Destination.lat+','+trip.LegList.Leg.slice(-1)[0].Destination.lon" target="_blank">{{ trip.LegList.Leg.slice(-1)[0].Destination.name }}</a><br>
-                </span>
-                <span v-else="" v-for="leg in trip.LegList.Leg">
-                  {{ leg.Origin.time.substring(0,5) }} 🚉 <a v-bind:href="'https://www.google.com/maps/search/'+leg.Origin.lat+','+leg.Origin.lon" target="_blank">{{ leg.Origin.name }}</a><br>
-                  {{ leg.Destination.time.substring(0,5) }} 🎯 <a v-bind:href="'https://www.google.com/maps/search/'+leg.Destination.lat+','+leg.Destination.lon" target="_blank">{{ leg.Destination.name }}</a><br>
-                </span>
-                <div class="btn-group">
-                  <button class="btn btn-sm btn-secondary" v-on:click="trips.splice(i, 1)" type="button">❌</button>
-                  <button class="btn btn-sm btn-secondary" v-on:click="makeICS(1, 2, trip.LegList.Leg[0].Origin.name, trip.LegList.Leg.slice(-1)[0].Destination.name, 5)" type="button">📅</button>
-                  <button v-on:click="trips[i].showAllStops = 1" type="button" class="btn btn-sm btn-secondary">⤵</button>
-                  <a class="btn btn-sm btn-secondary" target="_blank" v-bind:href="'https://www.'+trip.LegList.Leg[0].Product.operatorCode+'.se'" v-bind:title="trip.LegList.Leg[0].Product.operator">🎫</a>
-                </div>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
@@ -235,6 +213,18 @@ var yathra = new Vue({
 	traveltypes: {}
   },
   methods: {
+    detailsToggle: function(trip){
+       if (trip.showAllStops){
+          trip.showAllStops = false;
+       } else {
+          trip.showAllStops = true;
+       }
+    },
+    travelDate: function(trip){
+      var days = ["Sö","Må","Ti","On","To","Fr","Lö"];
+      tid = new Date(trip.LegList.Leg[0].Origin.date+ "T" + trip.LegList.Leg[0].Origin.time);
+      return days[tid.getDay()] + " " + tid.getDate() + "/" + tid.getMonth();
+    },
     totallowestprice: function(trip){
       var total = 0;
       try{
@@ -244,7 +234,7 @@ var yathra = new Vue({
           }
         });
       } catch(e){
-        console.log(e);
+        //console.log(e);
         total += 999999
       }
       return total
@@ -449,18 +439,27 @@ var yathra = new Vue({
     store_trips: function (){
         localStorage.setItem("trips_list", JSON.stringify(this.trips));
     },
-    makeICS: function (start, end, from, to, company){
-      calendar = "BEGIN:VCALENDAR" + "\n" +
-        "VERSION:2.0" + "\n" +
-        "PRODID:-//hacksw/handcal//NONSGML v1.0//EN" + "\n" +
-        "BEGIN:VEVENT" + "\n" +
-        "UID:19970610T172345Z-AF23B2@example.com" + "\n" +
-        "DTSTAMP:20181125T172345Z" + "\n" +
-        "DTSTART:20181125T170000Z" + "\n" +
-        "DTEND:20181125T200000Z" + "\n" +
-        "SUMMARY:" + company + "\n" +
-        "LOCATION:" + from + " -> " + to + "\n" +
-        "END:VEVENT" + "\n" +
+    makeICS: function (trip){
+      var start = new Date(trip.LegList.Leg[0].Origin.date + " " + trip.LegList.Leg[0].Origin.time);
+      var end = new Date(trip.LegList.Leg.slice(-1)[0].Destination.date + " " + trip.LegList.Leg.slice(-1)[0].Destination.time);
+      var from = trip.LegList.Leg[0].Origin.name;
+      var to = trip.LegList.Leg.slice(-1)[0].Destination.name;
+      var company = trip.LegList.Leg[0].Product.operator
+    
+      function formatDate(date){
+        return date.toISOString().split("-").join("").split(":").join("").split(".")[0]+"Z";
+      };
+      calendar = "BEGIN:VCALENDAR" + "\r\n" +
+        "VERSION:2.0" + "\r\n" +
+        "PRODID:-//hacksw/handcal//NONSGML v1.0//EN" + "\r\n" +
+        "BEGIN:VEVENT" + "\r\n" +
+        "UID:19970610T172345Z-AF23B2@example.com" + "\r\n" +
+        "DTSTAMP:"+ formatDate(new Date()) + "\r\n" +
+        "DTSTART:"+ formatDate(start) +  "\r\n" +
+        "DTEND:"+ formatDate(end) +  "\r\n" +
+        "SUMMARY:" + company + "\r\n" +
+        "LOCATION:" + from + " -> " + to + "\r\n" +
+        "END:VEVENT" + "\r\n" +
         "END:VCALENDAR";
      window.open( "data:text/calendar;charset=utf8," + escape(calendar));
      }
@@ -474,6 +473,16 @@ var yathra = new Vue({
 	});
   },
   computed: {
+    timetablesFirstTime: function(){
+    return this.timetables[0].LegList.Leg[0].Origin.date + 
+      " " +
+      this.timetables[0].LegList.Leg[0].Origin.time.substring(0,5);
+    },
+    timetablesLastTime: function(){
+    return this.timetables.slice(-1)[0].LegList.Leg[0].Origin.date + 
+      " " +
+      this.timetables.slice(-1)[0].LegList.Leg[0].Origin.time.substring(0,5);
+    },
     lowprice: function(){
     var main = this;
     function compare(a, b) {
