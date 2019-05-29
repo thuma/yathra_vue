@@ -57,6 +57,13 @@ def distanse(locationa,locationb):
 
 def StopIdToName(id):
   current = {"dist":9999999}
+  if id == "740020671":
+    return {"id":"24531"} #T2/3
+  elif id == "740033206":
+    return {"id":"24521"} #T4
+  elif id == "740043310":
+    return {"id":"16908"} #T5
+
   for row in db.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
     position = {
     	"lat":float(row[0]),

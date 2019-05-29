@@ -780,7 +780,7 @@ def search():
         pricelist.append({
             "productId": url,
             "productTitle": price["itineraryPriceGroupChoices"][0]["priceGroupCode"]["text"],
-            "productDescription": price["flex"]["text"],
+            "productDescription": price["bookingClass"]["text"],
             "fares": [
                 {
                     "amount": pris,
