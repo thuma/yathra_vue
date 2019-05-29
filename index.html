@@ -554,8 +554,8 @@ var yathra = new Vue({
             return 0
         }
         function compareArrTime(a, b) {
-            av = a.LegList.Leg.slice(-1)[0].Origin.date + "T" + a.LegList.Leg.slice(-1)[0].Origin.time;
-            bv = b.LegList.Leg.slice(-1)[0].Origin.date + "T" + b.LegList.Leg.slice(-1)[0].Origin.time;
+            av = a.LegList.Leg.slice(-1)[0].Destination.date + "T" + a.LegList.Leg.slice(-1)[0].Destination.time;
+            bv = b.LegList.Leg.slice(-1)[0].Destination.date + "T" + b.LegList.Leg.slice(-1)[0].Destination.time;
             if (av < bv)
                 return -1;
             if (av > bv)
