@@ -103,20 +103,22 @@
                   Sök resor före {{ timetablesFirstTime }}
                 </div>
               </li>
-              <li v-for="trip, i in lowprice" class="list-group-item">
+              <li class="list-group-item">
+                Sortera
+                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='price'">Pris</button>
+                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='time'">Restid</button>
+                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='changes'">Byten</button>
+                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='depTime'">Avgång</button>
+                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='arrTime'">Ankomst</button>
+              </li>
+              <li v-for="trip, i in sortBySelected" class="list-group-item">
                 <span v-on:click="detailsToggle(trip)">
                     {{ travelDate(trip) }}
-                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} - 
-                    {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} - 
-                    <span v-if="trip.duration.indexOf('H') !== -1">
-                    {{ trip.duration.split("T")[1].split("H")[0] }} h
-                    {{ trip.duration.split("T")[1].split("H")[1].split("M")[0] }} m - 
-                    </span>
-                    <span v-if="trip.duration.indexOf('H') < 0">
-                    {{ trip.duration.split("T")[1].split("M")[0] }} minuter - 
-                    </span>
+                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} -
+                    {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} | 
+                    {{ travelTime(trip.LegList.Leg) }} | 
                     <span title="Pris" v-if="totallowestprice(trip) < 999999">
-                    {{ totallowestprice(trip) }} SEK -
+                    {{ totallowestprice(trip) }} kr |
                     </span>
                     <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} </span>
                 </span>
@@ -213,6 +215,7 @@ var yathra = new Vue({
     scrB: "",
     scrF: "",
     timetables: [],
+    sortBy: "price",
     trips: [],
     areas: {},
     price: {"oretag":{}},
@@ -220,7 +223,28 @@ var yathra = new Vue({
 	traveltypes: {}
   },
   methods: {
-    changes(legs){
+    travelTime: function (legs){
+      hours =  this.travelTimeMS(legs) / 36e5;
+      if ( hours > 1 ){
+        return Math.round(hours*10)/10 + "h"
+      } else {
+        return Math.round(hours*60) + "m"
+      }
+    },
+    travelTimeMS: function (legs){
+      var start = false;
+      var end
+      legs.forEach(function(leg){
+        if(leg.type !== "WALK" && leg.type !== "TRSF"){
+          if(start == false){
+            start = new Date(leg.Origin.date+"T"+leg.Origin.time);
+          }
+          end = new Date(leg.Destination.date+"T"+leg.Destination.time);         
+        }
+      });
+      return (end - start)
+    },
+    changes: function(legs){
       var count = -1
       legs.forEach(function(leg){
         if(leg.type !== "WALK" && leg.type !== "TRSF"){
@@ -250,7 +274,6 @@ var yathra = new Vue({
           }
         });
       } catch(e){
-        //console.log(e);
         total += 999999
       }
       return total
@@ -304,7 +327,6 @@ var yathra = new Vue({
     getPrice: function(trip){
 	  var next = this;
 	  trip.LegList.Leg.forEach(function(leg){
-		console.log(leg)
 		if(leg.type !== "WALK" && leg.type !== "TRSF" && next.operators.indexOf(leg.Product.operatorCode) >= 0){
 		  var search = {
 			"route": [
@@ -340,7 +362,6 @@ var yathra = new Vue({
 		});
 	},
     next_in_timetable: function (e){
-      console.log("asd");
       var xhr = new XMLHttpRequest();
       var next = this
       xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json&context='+this.scrF);
@@ -357,13 +378,12 @@ var yathra = new Vue({
             next.timetables = next.timetables.concat(newData)
             next.scrF = JSON.parse(xhr.responseText).scrF
           } else {
-            console.log('Error: ' + xhr.status); // An error occurred during the request.
+            // An error occurred during the request.
           }
         }
       xhr.send(null);
     },
     before_in_timetable: function(e){
-      console.log("asd");
       var xhr = new XMLHttpRequest();
       var next = this
       xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json&context='+this.scrB);
@@ -380,7 +400,7 @@ var yathra = new Vue({
             next.timetables = newData.concat(next.timetables)
             next.scrB = JSON.parse(xhr.responseText).scrB
           } else {
-            console.log('Error: ' + xhr.status); // An error occurred during the request.
+            // An error occurred during the request.
           }
         }
       xhr.send(null);
@@ -423,7 +443,7 @@ var yathra = new Vue({
         var OK = 200; // status 200 is a successful return.
         if (xhr.readyState === DONE) {
           if (xhr.status === OK) {
-            console.log('Message: ' + next.timetables);
+          
             ttable = JSON.parse(xhr.responseText).Trip
             ttable.forEach(function(trip) {
                 trip.showAllStops = false;
@@ -433,7 +453,7 @@ var yathra = new Vue({
             next.scrB = JSON.parse(xhr.responseText).scrB
             next.scrF = JSON.parse(xhr.responseText).scrF
           } else {
-            console.log('Message state: ' + xhr.status); // An error occurred during the request.
+             // An error occurred during the request.
           }
         }
       }
@@ -504,18 +524,66 @@ var yathra = new Vue({
       " " +
       this.timetables.slice(-1)[0].LegList.Leg[0].Origin.time.substring(0,5);
     },
-    lowprice: function(){
-    var main = this;
-    function compare(a, b) {
-      av = main.totallowestprice(a)
-      bv = main.totallowestprice(b)
-      if (av < bv)
-        return -1;
-      if (av > bv)
-        return 1;
-      return 0
+    sortBySelected: function(){
+        var main = this;
+        function comparePrice(a, b) {
+            av = main.totallowestprice(a)
+            bv = main.totallowestprice(b)
+            if (av < bv)
+                return -1;
+            if (av > bv)
+                return 1;
+            return 0
+        }
+        function compareTime(a, b) {
+            av = main.travelTimeMS(a.LegList.Leg)
+            bv = main.travelTimeMS(b.LegList.Leg)
+            if (av < bv)
+                return -1;
+            if (av > bv)
+                return 1;
+            return 0
+        }
+        function compareDepTime(a, b) {
+            av = a.LegList.Leg[0].Origin.date + "T" + a.LegList.Leg[0].Origin.time;
+            bv = b.LegList.Leg[0].Origin.date + "T" + b.LegList.Leg[0].Origin.time;
+            if (av < bv)
+                return -1;
+            if (av > bv)
+                return 1;
+            return 0
+        }
+        function compareArrTime(a, b) {
+            av = a.LegList.Leg.slice(-1)[0].Origin.date + "T" + a.LegList.Leg.slice(-1)[0].Origin.time;
+            bv = b.LegList.Leg.slice(-1)[0].Origin.date + "T" + b.LegList.Leg.slice(-1)[0].Origin.time;
+            if (av < bv)
+                return -1;
+            if (av > bv)
+                return 1;
+            return 0
+        }
+        function compareChanges(a, b) {
+            av = main.changes(a.LegList.Leg);
+            bv = main.changes(b.LegList.Leg);
+            if (av < bv)
+                return -1;
+            if (av > bv)
+                return 1;
+            return 0
+        }
+      if(this.sortBy == "price"){
+        return this.timetables.slice().sort(comparePrice);
+      } else if (this.sortBy == "time") {
+        return this.timetables.slice().sort(compareTime);
+      } else if (this.sortBy == "depTime") {
+        return this.timetables.slice().sort(compareDepTime);
+      } else if (this.sortBy == "arrTime") {
+        return this.timetables.slice().sort(compareArrTime);
+      } else if (this.sortBy == "changes") {
+        return this.timetables.slice().sort(comparePrice).sort(compareChanges);
+      } else {
+        return this.timetables;
       }
-      return this.timetables.slice().sort(compare);
     },
     slider_to_time: function (){
       return slider_to_time_conv(this.time_slider);
@@ -649,7 +717,7 @@ function get_stations(){
         stations = CSVToArray(xhr.responseText, ",").filter(station => station[0]!=="");
         yathra.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
       } else {
-        console.log('Error: ' + xhr.status); // An error occurred during the request.
+         // An error occurred during the request.
       }
     }
   xhr.send(null);
@@ -671,7 +739,7 @@ function get_operators(){
         operators = CSVToArray(xhr.responseText, ",").filter(row => row[0]!=="");
         operators.slice(1).forEach(function(data){yathra.$set(yathra.alloperators, data[0], {"name":data[1], "url":data[2]})});
       } else {
-        console.log('Error: ' + xhr.status); // An error occurred during the request.
+         // An error occurred during the request.
       }
     }
   xhr.send(null);
@@ -688,7 +756,7 @@ function get_areas(){
       if (xhr.status === OK)
         yathra.areas = JSON.parse(xhr.responseText);
       } else {
-        console.log('Error: ' + xhr.status); // An error occurred during the request.
+         // An error occurred during the request.
       }
     }
   xhr.send(null);
