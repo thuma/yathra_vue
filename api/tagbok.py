@@ -315,13 +315,13 @@ def search():
     #    ],
     #    "temporal": {
     #        "earliestDepature": "2019-07-01T12:05:00Z",
-    #        "latestArrival": "2019-07-01T16:05:00Z" 
+    #        "latestArrival": "2019-07-01T16:05:00Z"
     #    }
     #}
 
     cookies = {
-        "JSESSIONID":"JM8FYi8KwdpksuInW5PA95ToS2X255OxpQ75q1YB.f868c9f42601",
-        "JSESSIONID":"56Xhp0fuxNYTixfMavvyYxUI3c90FO4cqRM9etAR.f868c9f42601"
+        "JSESSIONID":"TOTYUZvypQlMij3I7F1Fk06-SA8Mg5_ua34b5tZA.258ba32350e6",
+        "JSESSIONID":"TOTYUZvypQlMij3I7F1Fk06-SA8Mg5_ua34b5tZA.258ba32350e6"
         }
     headers = {
       'content-type': 'application/json',
@@ -724,8 +724,10 @@ def search():
       "maxNumberOfChanges": "7"
     }
 
+    url = "https://www.norrtag.se/will/api/rest/timetable/searchTimetable"
+    #url = "https://www.tagbokningen.se/will/api/rest/timetable/searchTimetable"
     result = requests.post(
-        "https://www.tagbokningen.se/will/api/rest/timetable/searchTimetable",
+        url,
         data=json.dumps(query),
         headers=headers,
         cookies=cookies
@@ -753,8 +755,10 @@ def search():
       "travellers": travelers
     }
 
+    purl = "https://www.norrtag.se/will/api/rest/gts/getPrice"
+    #purl = "https://www.tagbokningen.se/will/api/rest/gts/getPrice"
     result = requests.post(
-        "https://www.tagbokningen.se/will/api/rest/gts/getPrice",
+        purl,
         data=json.dumps(price),
         headers=headers,
         cookies=cookies
@@ -766,7 +770,7 @@ def search():
     url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13] + "/avgang/"
     url = url + search["temporal"]["earliestDepature"].replace("-","").replace("T","-").replace(":","")[0:13]+"/VU--///0//"
     products = []
-	
+
     for p in result.json():
       pricelist = []
       for price in p["salesCategories"]:
