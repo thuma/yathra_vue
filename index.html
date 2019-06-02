@@ -4,13 +4,6 @@
     <meta charset="utf-8">
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({
-        google_ad_client: "ca-pub-6026897790685472",
-        enable_page_level_ads: true
-      });
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
@@ -72,16 +65,15 @@
           </div>
         </div>
         <div class="col-lg-1 col-md-6 p-1">
-          <button type="button" v-on:click="find_in_timetable" class="btn btn-primary btn-block" >Sök</button>
+          <button type="button" v-on:click="find_in_timetable('new')" class="btn btn-primary btn-block" >Sök</button>
         </div>
       </div>
       <hr>
       <div class="row">
         <div class="col-lg-12">
           <div>
-            <h3 class="text-center" >Söksvar</h3>
             <ul class="list-group" v-if="timetables.length > 0">
-              <li class="list-group-item btn btn-secondary" v-on:click="before_in_timetable">
+              <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
                 <div class="mx-auto" style="width: fit-content;">
                   Sök resor före {{ timetablesFirstTime }}
                 </div>
@@ -121,7 +113,7 @@
                   <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
                 </div>
               </li>
-              <li class="list-group-item btn btn-secondary" v-on:click="next_in_timetable">
+              <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
                 <div class="mx-auto" style="width: fit-content;" >
                   Sök resor efter {{ timetablesLastTime }}
                 </div>
@@ -357,50 +349,6 @@ var yathra = new Vue({
 		  }
 		});
 	},
-    next_in_timetable: function (e){
-      var xhr = new XMLHttpRequest();
-      var next = this
-      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json&context='+this.scrF);
-      xhr.onreadystatechange = function () {
-        var DONE = 4; // readyState 4 means the request is done.
-        var OK = 200; // status 200 is a successful return.
-        if (xhr.readyState === DONE) {
-          if (xhr.status === OK)
-            var newData = JSON.parse(xhr.responseText).Trip
-            newData.forEach(function(trip) {
-                trip.showAllStops = false;
-				next.getPrice(trip);
-            })
-            next.timetables = next.timetables.concat(newData)
-            next.scrF = JSON.parse(xhr.responseText).scrF
-          } else {
-            // An error occurred during the request.
-          }
-        }
-      xhr.send(null);
-    },
-    before_in_timetable: function(e){
-      var xhr = new XMLHttpRequest();
-      var next = this
-      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.slider_to_time+'&date='+this.date+'&format=json&context='+this.scrB);
-      xhr.onreadystatechange = function () {
-        var DONE = 4; // readyState 4 means the request is done.
-        var OK = 200; // status 200 is a successful return.
-        if (xhr.readyState === DONE) {
-          if (xhr.status === OK)
-            var newData = JSON.parse(xhr.responseText).Trip
-            newData.forEach(function(trip) {
-                trip.showAllStops = false;
-				next.getPrice(trip);
-            })
-            next.timetables = newData.concat(next.timetables)
-            next.scrB = JSON.parse(xhr.responseText).scrB
-          } else {
-            // An error occurred during the request.
-          }
-        }
-      xhr.send(null);
-    },
     filterFrom: function (station) {
       return station.name.toUpperCase().startsWith(this.from.toUpperCase());
     },
@@ -429,25 +377,38 @@ var yathra = new Vue({
       this.from = to;
       this.from_station = to_station;
     },
-    find_in_timetable: function (){
-      this.timetables = [];
+    find_in_timetable: function(state){
+      var context = "";
+      if (state == "before"){
+        context = "&context="+this.scrB ;
+      } else if (state == "after"){
+        context = "&context="+this.scrF ;
+      }
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.date.split("T")[1].substring(0,5)+'&date='+this.date.split("T")[0]+'&format=json');
+      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.date.split("T")[1].substring(0,5)+'&date='+this.date.split("T")[0]+'&format=json'+context);
       var next = this
       xhr.onreadystatechange = function () {
         var DONE = 4; // readyState 4 means the request is done.
         var OK = 200; // status 200 is a successful return.
         if (xhr.readyState === DONE) {
           if (xhr.status === OK) {
-          
             ttable = JSON.parse(xhr.responseText).Trip
             ttable.forEach(function(trip) {
                 trip.showAllStops = false;
-                next.timetables.push(trip);
                 next.getPrice(trip);
             })
-            next.scrB = JSON.parse(xhr.responseText).scrB
-            next.scrF = JSON.parse(xhr.responseText).scrF
+            if (state == "before"){
+                next.timetables = ttable.concat(next.timetables)
+                next.scrB = JSON.parse(xhr.responseText).scrB
+            } else if (state == "new"){
+                next.timetables = ttable;
+                next.scrB = JSON.parse(xhr.responseText).scrB
+                next.scrF = JSON.parse(xhr.responseText).scrF
+            } else if (state == "after"){
+                next.timetables = next.timetables.concat(ttable);
+                next.scrB = JSON.parse(xhr.responseText).scrB
+                next.scrF = JSON.parse(xhr.responseText).scrF
+            }
           } else {
              // An error occurred during the request.
           }
