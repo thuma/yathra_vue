@@ -775,12 +775,12 @@ def search():
       pricelist = []
       for price in p["salesCategories"]:
         pris = float(price["totalPrice"]["value"])
-        if pris <= 200:
-            pris = pris - 25
-        elif pris <= 300:
-            pris = pris - 22
-        elif pris > 300:
-            pris = round(pris*0.946,0)
+        #if pris <= 200:
+        #    pris = pris - 25
+        #elif pris <= 300:
+        #    pris = pris - 22
+        #elif pris > 300:
+        #    pris = round(pris*0.946,0)
         pricelist.append({
             "productId": url,
             "productTitle": price["itineraryPriceGroupChoices"][0]["priceGroupCode"]["text"],
