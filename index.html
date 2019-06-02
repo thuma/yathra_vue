@@ -1,755 +1,762 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <link rel="icon" href="favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-    <style>
-    .btn-secondary { 
-      color: #000;
-      background-color: #e9ecef;
-      border-color: #ced4da;
-    }
-    span.kommun {
-      font-size: 10px;
-    }
-    button.kommun {
-      line-height: 15px;
-    }
-    </style>
-    <title>Yathra - Plannera din resa</title>
-  </head>
-  <body>
-    <div id="yathra" class="container">
-      <div class="row">
-        <div class="p-1 col-lg-12">
-            <img class="mx-auto d-block" src="vlogo.png" style="height: 45px;">
-        </div>
-      </div>
-      <div class="row" >
-        <div class="col-lg-4 col-md-6 p-1">
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Från</span>
-              <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
-                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
-              </div>
-            </div>
-            <input type="text" class="form-control" v-model="from">
-            <div class="input-group-appendend">
-              <button type="button" class="btn btn-secondary" v-on:click="switch_from_to">⇄</button>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-md-6 p-1">
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Till</span>
-              <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
-                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
-              </div>
-            </div>
-            <input type="text" class="form-control" v-model="to">
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6 p-1">
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Tid</span>
-            </div>
-            <input type="datetime-local" class="form-control" v-model="date" placeholder="2018-01-20">
-          </div>
-        </div>
-        <div class="col-lg-1 col-md-6 p-1">
-          <button type="button" v-on:click="find_in_timetable('new')" class="btn btn-primary btn-block" >Sök</button>
-        </div>
-      </div>
-      <hr>
-      <div class="row">
-        <div class="col-lg-12">
-          <div>
-            <ul class="list-group" v-if="timetables.length > 0">
-              <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
-                <div class="mx-auto" style="width: fit-content;">
-                  Sök resor före {{ timetablesFirstTime }}
-                </div>
-              </li>
-              <li class="list-group-item">
-                Sortera
-                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='price'">Pris</button>
-                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='time'">Restid</button>
-                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='changes'">Byten</button>
-                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='depTime'">Avgång</button>
-                <button class="btn btn-secondary btn-sm" v-on:click="sortBy='arrTime'">Ankomst</button>
-              </li>
-              <li v-for="trip, i in sortBySelected" class="list-group-item">
-                <span v-on:click="detailsToggle(trip)">
-                    <span title="Avgång och ankomst"> {{ travelDate(trip) }}
-                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} -
-                    {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }} | </span>
-                    <span title="Restid">{{ travelTime(trip.LegList.Leg) }} | </span>
-                    <span title="Pris" v-if="totallowestprice(trip) < 999999">
-                    {{ totallowestprice(trip) }} kr |
-                    </span>
-                    <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} | </span>
-                    <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="'/images_no_fallback/'+operatorid+'.jpg'" >
-                </span>
-                <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
-                  <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
-                    {{ leg.Origin.time }} {{ leg.Origin.name }} - 
-                    {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
-                    {{ catToIcon[leg.Product.catCode] }} </span>
-                    <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
-                        <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
-                    </a>
-                    <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">{{ ifprice(leg) }} SEK</a>
-                  </div>
-                </div>
-                <div class="btn-group" v-if="trip.showAllStops">
-                  <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
-                </div>
-              </li>
-              <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
-                <div class="mx-auto" style="width: fit-content;" >
-                  Sök resor efter {{ timetablesLastTime }}
-                </div>
-              </li>
-            </ul>
-            <div class="card">
-              <div class="card-body">
-              <h5 class="text-center">Priser från</h5>
-              <a v-bind:href="operatorUrlById(opid)" v-for="opid in operators" target="_blank">
-                <img style="height: 20px; margin:7px;"  v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
-              </a>
-              <h5 class="text-center">Tidtabeller för</h5>
-              <a v-bind:href="operatordata['url']" v-for="(operatordata, opid in alloperators" target="_blank">
-                <img style="height: 20px; margin:7px;"  v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
-              </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
-  <script>
-  
-function postAjax(url, data, success) {
-    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-    xhr.open('POST', url);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState>3 && xhr.status==200) { success(JSON.parse(xhr.responseText)); }
-    };
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(data);
-    return xhr;
-}
-
-function getAjax(url, success) {
-    var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-	xhr.open('GET', url);
-	xhr.onload = function() {
-		if ( xhr.readyState>3 && xhr.status === 200) {
-			success(JSON.parse(xhr.responseText));
-		}
-	};
-xhr.send();
-}
-
-function slider_to_time_conv(slider){
-      var hours = Math.floor(slider / 60);
-      var minutes = slider - hours * 60;
-      return ("0" + hours).substr(-2) + ":" + ("0" + minutes).substr(-2);
-    }
-
-now = new Date();
-var yathra = new Vue({
-  el: '#yathra',
-  data:{
-    catToIcon:{
-      "1":"🚅",
-      "2":"🚆",
-      "3":"🚌",
-      "4":"🚈",
-      "5":"🚇",
-      "6":"🚋",
-      "7":"🚍",
-      "8":"⛴}"
-    },
-    from:"",
-    from_station: {"id":"","name":""},
-    to:"",
-    to_station: {"id":"","name":""},
-    date:now.toISOString().substring(0,10),
-    allstations: [],
-    alloperators: {},
-    time_slider: "600",
-    searches: [],
-    scrB: "",
-    scrF: "",
-    dtime: "09:00",
-    timetables: [],
-    sortBy: "price",
-    trips: [],
-    areas: {},
-    price: {"oretag":{}},
-	operators: ["74","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
-	traveltypes: {}
-  },
-  methods: {
-    travelTime: function (legs){
-      hours =  this.travelTimeMS(legs) / 36e5;
-      if ( hours > 1 ){
-        return Math.round(hours*10)/10 + "h"
-      } else {
-        return Math.round(hours*60) + "m"
-      }
-    },
-    travelTimeMS: function (legs){
-      var start = false;
-      var end
-      legs.forEach(function(leg){
-        if(leg.type !== "WALK" && leg.type !== "TRSF"){
-          if(start == false){
-            start = new Date(leg.Origin.date+"T"+leg.Origin.time);
-          }
-          end = new Date(leg.Destination.date+"T"+leg.Destination.time);         
-        }
-      });
-      return (end - start)
-    },
-    changes: function(legs){
-      var count = -1
-      legs.forEach(function(leg){
-        if(leg.type !== "WALK" && leg.type !== "TRSF"){
-            count++;
-        }
-      })
-      return count
-    },
-    getUniqueOperators: function(legs){
-        var list = []
-        legs.forEach(function(leg){
-            if(leg.type !== "WALK" && leg.type !== "TRSF" && list.indexOf(leg.Product.operatorCode) < 0){
-               list.push(leg.Product.operatorCode);
+    <head>
+        <meta charset="utf-8">
+        <link rel="icon" href="favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <style>
+            .btn-secondary { 
+            color: #000;
+            background-color: #e9ecef;
+            border-color: #ced4da;
             }
-        });
-        return list
-    },
-    detailsToggle: function(trip){
-       if (trip.showAllStops){
-          trip.showAllStops = false;
-       } else {
-          trip.showAllStops = true;
-       }
-    },
-    travelDate: function(trip){
-      var days = ["Sö","Må","Ti","On","To","Fr","Lö"];
-      tid = new Date(trip.LegList.Leg[0].Origin.date+ "T" + trip.LegList.Leg[0].Origin.time);
-      return days[tid.getDay()] + " " + tid.getDate() + "/" + tid.getMonth();
-    },
-    totallowestprice: function(trip){
-      var total = 0;
-      try{
-        trip.LegList.Leg.forEach(function(leg){
-          if(leg.type !== "WALK" && leg.type !== "TRSF"){
-            total += leg.price[0][0].fares[0].amount;
-          }
-        });
-      } catch(e){
-        total += 999999
-      }
-      return total
-    },
-    operatorUrlById: function(id){
-        if ( id == "327" || id == "328" ){ 
-          return "https://track.adtraction.com/t/t?a=1213626540&as=1332239618&t=2&tk=1";
-        } else if (id == "838"){
-          return "https://tc.tradetracker.net/?c=26525&m=12&a=350004";
-        }
-		try{
-		  return this.alloperators[id]["url"];
-		}
-		catch(e){
-		  return id;
-		}
-    },
-    operatorNameById: function(id){
-		try{
-		  return this.alloperators[id]["name"];
-		}
-		catch(e){
-		  return id;
-		}
-    },
-    ifprice: function(leg){
-		try{
-		  return leg.price[0][0].fares[0].amount;
-		}
-		catch(e){
-		  return "";
-		}
-	},
-    ifcode: function(leg){
-		try{
-		  return leg.price[0][0].productId;
-		}
-		catch(e){
-		  return "";
-		}
-	},
-	buy: function(operatorid,tripid){
-		var paydata = {
-			"productId": tripid,
-			"apiKey": "782db60e8f929cd84818652ac0223b4d"
-		};
-	    postAjax("/price/"+operatorid+"/api/v1/buy", JSON.stringify(paydata), function(data){
-		  window.open(data.payUrl);
-		});
-	},
-    getPrice: function(trip){
-	  var next = this;
-	  trip.LegList.Leg.forEach(function(leg){
-		if(leg.type !== "WALK" && leg.type !== "TRSF" && next.operators.indexOf(leg.Product.operatorCode) >= 0){
-		  var search = {
-			"route": [
-				{ "stopId": leg.Origin.id },
-				{ "stopId": leg.Destination.id }
-			],
-			"travellersPerCategory": [
-				{
-					"cat": "VU",
-					"tra": 1,
-					"age": 35
-				}
-			],
-			"temporal": {
-				"earliestDepature": new Date(leg.Origin.date + "T" + leg.Origin.time).toISOString().split(".")[0]+"Z",
-				"latestArrival": new Date(leg.Destination.date + "T" + leg.Destination.time).toISOString().split(".")[0]+"Z"
-			}
-		  };
-          var cats = next.traveltypes[leg.Product.operatorCode];
-		  var ids = Object.keys(cats);
-		  var catid = "VU";
-		  for(var j = 0; j < ids.length; j++){
-			if(cats[ids[j]].indexOf("Vuxen") >= 0){
-			  catid = ids[j];
-			}
-		  }
-		  search.travellersPerCategory[0].cat = catid;
-
-		  var thisleg = leg;
-		  var thisf = next
-		  postAjax("/price/"+leg.Product.operatorCode+"/api/v1/product", JSON.stringify(search), function(data){ thisf.$set(thisleg, 'price', data);});
-		  }
-		});
-	},
-    filterFrom: function (station) {
-      return station.name.toUpperCase().startsWith(this.from.toUpperCase());
-    },
-    filterFromIn: function (station) {
-      return station.name.toUpperCase().includes(this.from.toUpperCase(), 1);
-    },
-    filterTo: function (station) {
-      return station.name.toUpperCase().startsWith(this.to.toUpperCase());
-    },
-    filterToIn: function (station) {
-      return station.name.toUpperCase().includes(this.to.toUpperCase(), 1);
-    },
-    set_from_station(station) {
-      this.from_station = station;
-      this.from = station.name;
-    },
-    set_to_station(station) {
-      this.to_station = station;
-      this.to = station.name;
-    },
-    switch_from_to(){
-      to = this.to;
-      to_station= this.to_station;
-      this.to = this.from;
-      this.to_station = this.from_station;
-      this.from = to;
-      this.from_station = to_station;
-    },
-    find_in_timetable: function(state){
-      var context = "";
-      if (state == "before"){
-        context = "&context="+this.scrB ;
-      } else if (state == "after"){
-        context = "&context="+this.scrF ;
-      }
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.date.split("T")[1].substring(0,5)+'&date='+this.date.split("T")[0]+'&format=json'+context);
-      var next = this
-      xhr.onreadystatechange = function () {
-        var DONE = 4; // readyState 4 means the request is done.
-        var OK = 200; // status 200 is a successful return.
-        if (xhr.readyState === DONE) {
-          if (xhr.status === OK) {
-            ttable = JSON.parse(xhr.responseText).Trip
-            ttable.forEach(function(trip) {
-                trip.showAllStops = false;
-                next.getPrice(trip);
-            })
-            if (state == "before"){
-                next.timetables = ttable.concat(next.timetables)
-                next.scrB = JSON.parse(xhr.responseText).scrB
-            } else if (state == "new"){
-                next.timetables = ttable;
-                next.scrB = JSON.parse(xhr.responseText).scrB
-                next.scrF = JSON.parse(xhr.responseText).scrF
-            } else if (state == "after"){
-                next.timetables = next.timetables.concat(ttable);
-                next.scrB = JSON.parse(xhr.responseText).scrB
-                next.scrF = JSON.parse(xhr.responseText).scrF
+            span.kommun {
+            font-size: 10px;
             }
-          } else {
-             // An error occurred during the request.
+            button.kommun {
+            line-height: 15px;
+            }
+        </style>
+        <title>Yathra - Plannera din resa</title>
+    </head>
+    <body>
+        <div id="yathra" class="container">
+            <div class="row">
+                <div class="p-1 col-lg-12">
+                    <img class="mx-auto d-block" src="vlogo.png" style="height: 45px;">
+                </div>
+            </div>
+            <div class="row" >
+                <div class="col-lg-4 col-md-6 p-1">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Från</span>
+                            <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
+                                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
+                            </div>
+                        </div>
+                        <input type="text" class="form-control" v-model="from">
+                        <div class="input-group-appendend">
+                            <button type="button" class="btn btn-secondary" v-on:click="switch_from_to">⇄</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 p-1">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Till</span>
+                            <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
+                                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
+                            </div>
+                        </div>
+                        <input type="text" class="form-control" v-model="to">
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 p-1">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Tid</span>
+                        </div>
+                        <input type="datetime-local" class="form-control" v-model="date" placeholder="2018-01-20">
+                    </div>
+                </div>
+                <div class="col-lg-1 col-md-6 p-1">
+                    <button type="button" v-on:click="find_in_timetable('new')" class="btn btn-primary btn-block" >Sök</button>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-lg-12 p-1">
+                    <div v-if="timetables.length > 0">
+                        <ul class="list-group">
+                            <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
+                                <div class="mx-auto" style="width: fit-content;">
+                                    Sök resor före {{ timetablesFirstTime }}
+                                </div>
+                            </li>
+                            <li v-for="trip, i in sortBySelected" class="list-group-item">
+                                <div class="row">
+                                    <div class="col-lg-2 p-0">
+                                        <span v-on:click="detailsToggle(trip)">
+                                        <span title="Avgång och ankomst"> {{ travelDate(trip) }}
+                                        {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} -
+                                        {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
+                                    </div>
+                                    <div class="col-lg-1 p-0">
+                                        <span title="Restid">{{ travelTime(trip.LegList.Leg) }}</span>
+                                    </div>
+                                    <div class="col-lg-1 p-0">
+                                        <span title="Pris" v-if="totallowestprice(trip) < 999999">
+                                        {{ totallowestprice(trip) }} kr
+                                        </span>
+                                    </div>
+                                    <div class="col-lg-1 p-0">
+                                        <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} | </span>
+                                    </div>
+                                    <div class="col-lg-7 p-0">
+                                        <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="'/images_no_fallback/'+operatorid+'.jpg'" >
+                                    </div>
+                                    <div class="col-lg-12 p-0">
+                                        <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
+                                            <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
+                                                {{ leg.Origin.time }} {{ leg.Origin.name }} - 
+                                                {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
+                                                {{ catToIcon[leg.Product.catCode] }} </span>
+                                                <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
+                                                <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
+                                                </a>
+                                                <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">
+                                                    {{ ifprice(leg) }} SEK</a>
+                                            </div>
+                                        </div>
+                                        <div class="btn-group" v-if="trip.showAllStops">
+                                        <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
+                                <div class="mx-auto" style="width: fit-content;" >
+                                    Sök resor efter {{ timetablesLastTime }}
+                                </div>
+                            </li>
+                        </ul>
+                        <hr>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="text-center">Priser från</h5>
+                            <a v-bind:href="operatorUrlById(opid)" v-for="opid in operators" target="_blank">
+                            <img style="height: 20px; margin:7px;"  v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            </a>
+                            <h5 class="text-center">Tidtabeller för</h5>
+                            <a v-bind:href="operatordata['url']" v-for="(operatordata, opid in alloperators" target="_blank">
+                            <img style="height: 20px; margin:7px;"  v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        function postAjax(url, data, success) {
+            var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+            xhr.open('POST', url);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState>3 && xhr.status==200) { success(JSON.parse(xhr.responseText)); }
+            };
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(data);
+            return xhr;
+        }
+        
+        function getAjax(url, success) {
+            var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+        	xhr.open('GET', url);
+        	xhr.onload = function() {
+        		if ( xhr.readyState>3 && xhr.status === 200) {
+        			success(JSON.parse(xhr.responseText));
+        		}
+        	};
+        xhr.send();
+        }
+        
+        function slider_to_time_conv(slider){
+              var hours = Math.floor(slider / 60);
+              var minutes = slider - hours * 60;
+              return ("0" + hours).substr(-2) + ":" + ("0" + minutes).substr(-2);
+            }
+        
+        now = new Date();
+        var yathra = new Vue({
+          el: '#yathra',
+          data:{
+            catToIcon:{
+              "1":"🚅",
+              "2":"🚆",
+              "3":"🚌",
+              "4":"🚈",
+              "5":"🚇",
+              "6":"🚋",
+              "7":"🚍",
+              "8":"⛴}"
+            },
+            from:"",
+            from_station: {"id":"","name":""},
+            to:"",
+            to_station: {"id":"","name":""},
+            date:now.toISOString().substring(0,10),
+            allstations: [],
+            alloperators: {},
+            time_slider: "600",
+            searches: [],
+            scrB: "",
+            scrF: "",
+            dtime: "09:00",
+            timetables: [],
+            sortBy: "price",
+            trips: [],
+            areas: {},
+            price: {"oretag":{}},
+        	operators: ["74","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
+        	traveltypes: {}
+          },
+          methods: {
+            travelTime: function (legs){
+              hours =  this.travelTimeMS(legs) / 36e5;
+              if ( hours > 1 ){
+                return Math.round(hours*10)/10 + "h"
+              } else {
+                return Math.round(hours*60) + "m"
+              }
+            },
+            travelTimeMS: function (legs){
+              var start = false;
+              var end
+              legs.forEach(function(leg){
+                if(leg.type !== "WALK" && leg.type !== "TRSF"){
+                  if(start == false){
+                    start = new Date(leg.Origin.date+"T"+leg.Origin.time);
+                  }
+                  end = new Date(leg.Destination.date+"T"+leg.Destination.time);         
+                }
+              });
+              return (end - start)
+            },
+            changes: function(legs){
+              var count = -1
+              legs.forEach(function(leg){
+                if(leg.type !== "WALK" && leg.type !== "TRSF"){
+                    count++;
+                }
+              })
+              return count
+            },
+            getUniqueOperators: function(legs){
+                var list = []
+                legs.forEach(function(leg){
+                    if(leg.type !== "WALK" && leg.type !== "TRSF" && list.indexOf(leg.Product.operatorCode) < 0){
+                       list.push(leg.Product.operatorCode);
+                    }
+                });
+                return list
+            },
+            detailsToggle: function(trip){
+               if (trip.showAllStops){
+                  trip.showAllStops = false;
+               } else {
+                  trip.showAllStops = true;
+               }
+            },
+            travelDate: function(trip){
+              var days = ["Sö","Må","Ti","On","To","Fr","Lö"];
+              tid = new Date(trip.LegList.Leg[0].Origin.date+ "T" + trip.LegList.Leg[0].Origin.time);
+              return days[tid.getDay()] + " " + tid.getDate() + "/" + tid.getMonth();
+            },
+            totallowestprice: function(trip){
+              var total = 0;
+              try{
+                trip.LegList.Leg.forEach(function(leg){
+                  if(leg.type !== "WALK" && leg.type !== "TRSF"){
+                    total += leg.price[0][0].fares[0].amount;
+                  }
+                });
+              } catch(e){
+                total += 999999
+              }
+              return total
+            },
+            operatorUrlById: function(id){
+                if ( id == "327" || id == "328" ){ 
+                  return "https://track.adtraction.com/t/t?a=1213626540&as=1332239618&t=2&tk=1";
+                } else if (id == "838"){
+                  return "https://tc.tradetracker.net/?c=26525&m=12&a=350004";
+                }
+        		try{
+        		  return this.alloperators[id]["url"];
+        		}
+        		catch(e){
+        		  return id;
+        		}
+            },
+            operatorNameById: function(id){
+        		try{
+        		  return this.alloperators[id]["name"];
+        		}
+        		catch(e){
+        		  return id;
+        		}
+            },
+            ifprice: function(leg){
+        		try{
+        		  return leg.price[0][0].fares[0].amount;
+        		}
+        		catch(e){
+        		  return "";
+        		}
+        	},
+            ifcode: function(leg){
+        		try{
+        		  return leg.price[0][0].productId;
+        		}
+        		catch(e){
+        		  return "";
+        		}
+        	},
+        	buy: function(operatorid,tripid){
+        		var paydata = {
+        			"productId": tripid,
+        			"apiKey": "782db60e8f929cd84818652ac0223b4d"
+        		};
+        	    postAjax("/price/"+operatorid+"/api/v1/buy", JSON.stringify(paydata), function(data){
+        		  window.open(data.payUrl);
+        		});
+        	},
+            getPrice: function(trip){
+        	  var next = this;
+        	  trip.LegList.Leg.forEach(function(leg){
+        		if(leg.type !== "WALK" && leg.type !== "TRSF" && next.operators.indexOf(leg.Product.operatorCode) >= 0){
+        		  var search = {
+        			"route": [
+        				{ "stopId": leg.Origin.id },
+        				{ "stopId": leg.Destination.id }
+        			],
+        			"travellersPerCategory": [
+        				{
+        					"cat": "VU",
+        					"tra": 1,
+        					"age": 35
+        				}
+        			],
+        			"temporal": {
+        				"earliestDepature": new Date(leg.Origin.date + "T" + leg.Origin.time).toISOString().split(".")[0]+"Z",
+        				"latestArrival": new Date(leg.Destination.date + "T" + leg.Destination.time).toISOString().split(".")[0]+"Z"
+        			}
+        		  };
+                  var cats = next.traveltypes[leg.Product.operatorCode];
+        		  var ids = Object.keys(cats);
+        		  var catid = "VU";
+        		  for(var j = 0; j < ids.length; j++){
+        			if(cats[ids[j]].indexOf("Vuxen") >= 0){
+        			  catid = ids[j];
+        			}
+        		  }
+        		  search.travellersPerCategory[0].cat = catid;
+        
+        		  var thisleg = leg;
+        		  var thisf = next
+        		  postAjax("/price/"+leg.Product.operatorCode+"/api/v1/product", JSON.stringify(search), function(data){ thisf.$set(thisleg, 'price', data);});
+        		  }
+        		});
+        	},
+            filterFrom: function (station) {
+              return station.name.toUpperCase().startsWith(this.from.toUpperCase());
+            },
+            filterFromIn: function (station) {
+              return station.name.toUpperCase().includes(this.from.toUpperCase(), 1);
+            },
+            filterTo: function (station) {
+              return station.name.toUpperCase().startsWith(this.to.toUpperCase());
+            },
+            filterToIn: function (station) {
+              return station.name.toUpperCase().includes(this.to.toUpperCase(), 1);
+            },
+            set_from_station(station) {
+              this.from_station = station;
+              this.from = station.name;
+            },
+            set_to_station(station) {
+              this.to_station = station;
+              this.to = station.name;
+            },
+            switch_from_to(){
+              to = this.to;
+              to_station= this.to_station;
+              this.to = this.from;
+              this.to_station = this.from_station;
+              this.from = to;
+              this.from_station = to_station;
+            },
+            find_in_timetable: function(state){
+              var context = "";
+              if (state == "before"){
+                context = "&context="+this.scrB ;
+              } else if (state == "after"){
+                context = "&context="+this.scrF ;
+              }
+              var xhr = new XMLHttpRequest();
+              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.date.split("T")[1].substring(0,5)+'&date='+this.date.split("T")[0]+'&format=json'+context);
+              var next = this
+              xhr.onreadystatechange = function () {
+                var DONE = 4; // readyState 4 means the request is done.
+                var OK = 200; // status 200 is a successful return.
+                if (xhr.readyState === DONE) {
+                  if (xhr.status === OK) {
+                    ttable = JSON.parse(xhr.responseText).Trip
+                    ttable.forEach(function(trip) {
+                        trip.showAllStops = false;
+                        next.getPrice(trip);
+                    })
+                    if (state == "before"){
+                        next.timetables = ttable.concat(next.timetables)
+                        next.scrB = JSON.parse(xhr.responseText).scrB
+                    } else if (state == "new"){
+                        next.timetables = ttable;
+                        next.scrB = JSON.parse(xhr.responseText).scrB
+                        next.scrF = JSON.parse(xhr.responseText).scrF
+                    } else if (state == "after"){
+                        next.timetables = next.timetables.concat(ttable);
+                        next.scrB = JSON.parse(xhr.responseText).scrB
+                        next.scrF = JSON.parse(xhr.responseText).scrF
+                    }
+                  } else {
+                     // An error occurred during the request.
+                  }
+                }
+              }
+              xhr.send(null);
+            },
+            save_search: function (){
+              this.searches.push({
+                from_station: this.from_station,
+                to_station: this.to_station,
+                date: this.date,
+                time_slider: this.time_slider
+              });
+            localStorage.setItem("searches_list", JSON.stringify(this.searches));
+            },
+            restore_search: function (load_search){
+              this.from_station = load_search.from_station;
+              this.from = load_search.from_station.name;
+              this.to_station = load_search.to_station;
+              this.to = load_search.to_station.name;
+              this.date = load_search.date;
+              this.time_slider = load_search.time_slider;
+              this.find_in_timetable();
+            },
+            store_trips: function (){
+                localStorage.setItem("trips_list", JSON.stringify(this.trips));
+            },
+            makeICS: function (trip){
+              var start = new Date(trip.LegList.Leg[0].Origin.date + " " + trip.LegList.Leg[0].Origin.time);
+              var end = new Date(trip.LegList.Leg.slice(-1)[0].Destination.date + " " + trip.LegList.Leg.slice(-1)[0].Destination.time);
+              var from = trip.LegList.Leg[0].Origin.name;
+              var to = trip.LegList.Leg.slice(-1)[0].Destination.name;
+              var company = trip.LegList.Leg[0].Product.operator
+            
+              function formatDate(date){
+                return date.toISOString().split("-").join("").split(":").join("").split(".")[0]+"Z";
+              };
+              calendar = "BEGIN:VCALENDAR" + "\r\n" +
+                "VERSION:2.0" + "\r\n" +
+                "PRODID:-//hacksw/handcal//NONSGML v1.0//EN" + "\r\n" +
+                "BEGIN:VEVENT" + "\r\n" +
+                "UID:19970610T172345Z-AF23B2@example.com" + "\r\n" +
+                "DTSTAMP:"+ formatDate(new Date()) + "\r\n" +
+                "DTSTART:"+ formatDate(start) +  "\r\n" +
+                "DTEND:"+ formatDate(end) +  "\r\n" +
+                "SUMMARY:" + company + "\r\n" +
+                "LOCATION:" + from + " -> " + to + "\r\n" +
+                "END:VEVENT" + "\r\n" +
+                "END:VCALENDAR";
+             window.open( "data:text/calendar;charset=utf8," + escape(calendar));
+             }
+          },
+          created: function() {
+            var then = this;
+        	this.operators.forEach(function(operator){
+        	    getAjax("/price/" + operator + "/api/v1/productcat/travellers", function(data){
+        		   then.traveltypes[operator] = data;
+        		});
+        	});
+          },
+          computed: {
+            timetablesFirstTime: function(){
+            return this.timetables[0].LegList.Leg[0].Origin.date + 
+              " " +
+              this.timetables[0].LegList.Leg[0].Origin.time.substring(0,5);
+            },
+            timetablesLastTime: function(){
+            return this.timetables.slice(-1)[0].LegList.Leg[0].Origin.date + 
+              " " +
+              this.timetables.slice(-1)[0].LegList.Leg[0].Origin.time.substring(0,5);
+            },
+            sortBySelected: function(){
+                var main = this;
+                function comparePrice(a, b) {
+                    av = main.totallowestprice(a)
+                    bv = main.totallowestprice(b)
+                    if (av < bv)
+                        return -1;
+                    if (av > bv)
+                        return 1;
+                    return 0
+                }
+                function compareTime(a, b) {
+                    av = main.travelTimeMS(a.LegList.Leg)
+                    bv = main.travelTimeMS(b.LegList.Leg)
+                    if (av < bv)
+                        return -1;
+                    if (av > bv)
+                        return 1;
+                    return 0
+                }
+                function compareDepTime(a, b) {
+                    av = a.LegList.Leg[0].Origin.date + "T" + a.LegList.Leg[0].Origin.time;
+                    bv = b.LegList.Leg[0].Origin.date + "T" + b.LegList.Leg[0].Origin.time;
+                    if (av < bv)
+                        return -1;
+                    if (av > bv)
+                        return 1;
+                    return 0
+                }
+                function compareArrTime(a, b) {
+                    av = a.LegList.Leg.slice(-1)[0].Destination.date + "T" + a.LegList.Leg.slice(-1)[0].Destination.time;
+                    bv = b.LegList.Leg.slice(-1)[0].Destination.date + "T" + b.LegList.Leg.slice(-1)[0].Destination.time;
+                    if (av < bv)
+                        return -1;
+                    if (av > bv)
+                        return 1;
+                    return 0
+                }
+                function compareChanges(a, b) {
+                    av = main.changes(a.LegList.Leg);
+                    bv = main.changes(b.LegList.Leg);
+                    if (av < bv)
+                        return -1;
+                    if (av > bv)
+                        return 1;
+                    return 0
+                }
+              if(this.sortBy == "price"){
+                return this.timetables.slice().sort(comparePrice);
+              } else if (this.sortBy == "time") {
+                return this.timetables.slice().sort(compareTime);
+              } else if (this.sortBy == "depTime") {
+                return this.timetables.slice().sort(compareDepTime);
+              } else if (this.sortBy == "arrTime") {
+                return this.timetables.slice().sort(compareArrTime);
+              } else if (this.sortBy == "changes") {
+                return this.timetables.slice().sort(comparePrice).sort(compareChanges);
+              } else {
+                return this.timetables;
+              }
+            },
+            slider_to_time: function (){
+              return slider_to_time_conv(this.time_slider);
+            },
+            fromStations: function () {
+              if (this.from == "" ){
+                return [];
+              }
+              startStations = this.allstations.filter(this.filterFrom);
+              inStations = this.allstations.slice(0, 10);
+              if (startStations.length < 10){
+               inStations = this.allstations.filter(this.filterFromIn);
+               }
+              validStations = startStations.concat(inStations);
+              return validStations.slice(0, 10).sort(compareStations);
+            },
+            toStations: function () {
+              if (this.to == "" ){
+                return []
+              }
+              startStations = this.allstations.filter(this.filterTo);
+              inStations = this.allstations.slice(0, 10);
+              if (startStations.length < 10){
+               inStations = this.allstations.filter(this.filterToIn);
+               }
+              validStations = startStations.concat(inStations);
+              return validStations.slice(0, 10).sort(compareStations);
+            }
           }
-        }
-      }
-      xhr.send(null);
-    },
-    save_search: function (){
-      this.searches.push({
-        from_station: this.from_station,
-        to_station: this.to_station,
-        date: this.date,
-        time_slider: this.time_slider
-      });
-    localStorage.setItem("searches_list", JSON.stringify(this.searches));
-    },
-    restore_search: function (load_search){
-      this.from_station = load_search.from_station;
-      this.from = load_search.from_station.name;
-      this.to_station = load_search.to_station;
-      this.to = load_search.to_station.name;
-      this.date = load_search.date;
-      this.time_slider = load_search.time_slider;
-      this.find_in_timetable();
-    },
-    store_trips: function (){
-        localStorage.setItem("trips_list", JSON.stringify(this.trips));
-    },
-    makeICS: function (trip){
-      var start = new Date(trip.LegList.Leg[0].Origin.date + " " + trip.LegList.Leg[0].Origin.time);
-      var end = new Date(trip.LegList.Leg.slice(-1)[0].Destination.date + " " + trip.LegList.Leg.slice(-1)[0].Destination.time);
-      var from = trip.LegList.Leg[0].Origin.name;
-      var to = trip.LegList.Leg.slice(-1)[0].Destination.name;
-      var company = trip.LegList.Leg[0].Product.operator
-    
-      function formatDate(date){
-        return date.toISOString().split("-").join("").split(":").join("").split(".")[0]+"Z";
-      };
-      calendar = "BEGIN:VCALENDAR" + "\r\n" +
-        "VERSION:2.0" + "\r\n" +
-        "PRODID:-//hacksw/handcal//NONSGML v1.0//EN" + "\r\n" +
-        "BEGIN:VEVENT" + "\r\n" +
-        "UID:19970610T172345Z-AF23B2@example.com" + "\r\n" +
-        "DTSTAMP:"+ formatDate(new Date()) + "\r\n" +
-        "DTSTART:"+ formatDate(start) +  "\r\n" +
-        "DTEND:"+ formatDate(end) +  "\r\n" +
-        "SUMMARY:" + company + "\r\n" +
-        "LOCATION:" + from + " -> " + to + "\r\n" +
-        "END:VEVENT" + "\r\n" +
-        "END:VCALENDAR";
-     window.open( "data:text/calendar;charset=utf8," + escape(calendar));
-     }
-  },
-  created: function() {
-    var then = this;
-	this.operators.forEach(function(operator){
-	    getAjax("/price/" + operator + "/api/v1/productcat/travellers", function(data){
-		   then.traveltypes[operator] = data;
-		});
-	});
-  },
-  computed: {
-    timetablesFirstTime: function(){
-    return this.timetables[0].LegList.Leg[0].Origin.date + 
-      " " +
-      this.timetables[0].LegList.Leg[0].Origin.time.substring(0,5);
-    },
-    timetablesLastTime: function(){
-    return this.timetables.slice(-1)[0].LegList.Leg[0].Origin.date + 
-      " " +
-      this.timetables.slice(-1)[0].LegList.Leg[0].Origin.time.substring(0,5);
-    },
-    sortBySelected: function(){
-        var main = this;
-        function comparePrice(a, b) {
-            av = main.totallowestprice(a)
-            bv = main.totallowestprice(b)
-            if (av < bv)
-                return -1;
-            if (av > bv)
-                return 1;
-            return 0
-        }
-        function compareTime(a, b) {
-            av = main.travelTimeMS(a.LegList.Leg)
-            bv = main.travelTimeMS(b.LegList.Leg)
-            if (av < bv)
-                return -1;
-            if (av > bv)
-                return 1;
-            return 0
-        }
-        function compareDepTime(a, b) {
-            av = a.LegList.Leg[0].Origin.date + "T" + a.LegList.Leg[0].Origin.time;
-            bv = b.LegList.Leg[0].Origin.date + "T" + b.LegList.Leg[0].Origin.time;
-            if (av < bv)
-                return -1;
-            if (av > bv)
-                return 1;
-            return 0
-        }
-        function compareArrTime(a, b) {
-            av = a.LegList.Leg.slice(-1)[0].Destination.date + "T" + a.LegList.Leg.slice(-1)[0].Destination.time;
-            bv = b.LegList.Leg.slice(-1)[0].Destination.date + "T" + b.LegList.Leg.slice(-1)[0].Destination.time;
-            if (av < bv)
-                return -1;
-            if (av > bv)
-                return 1;
-            return 0
-        }
-        function compareChanges(a, b) {
-            av = main.changes(a.LegList.Leg);
-            bv = main.changes(b.LegList.Leg);
-            if (av < bv)
-                return -1;
-            if (av > bv)
-                return 1;
-            return 0
-        }
-      if(this.sortBy == "price"){
-        return this.timetables.slice().sort(comparePrice);
-      } else if (this.sortBy == "time") {
-        return this.timetables.slice().sort(compareTime);
-      } else if (this.sortBy == "depTime") {
-        return this.timetables.slice().sort(compareDepTime);
-      } else if (this.sortBy == "arrTime") {
-        return this.timetables.slice().sort(compareArrTime);
-      } else if (this.sortBy == "changes") {
-        return this.timetables.slice().sort(comparePrice).sort(compareChanges);
-      } else {
-        return this.timetables;
-      }
-    },
-    slider_to_time: function (){
-      return slider_to_time_conv(this.time_slider);
-    },
-    fromStations: function () {
-      if (this.from == "" ){
-        return [];
-      }
-      startStations = this.allstations.filter(this.filterFrom);
-      inStations = this.allstations.slice(0, 10);
-      if (startStations.length < 10){
-       inStations = this.allstations.filter(this.filterFromIn);
-       }
-      validStations = startStations.concat(inStations);
-      return validStations.slice(0, 10).sort(compareStations);
-    },
-    toStations: function () {
-      if (this.to == "" ){
-        return []
-      }
-      startStations = this.allstations.filter(this.filterTo);
-      inStations = this.allstations.slice(0, 10);
-      if (startStations.length < 10){
-       inStations = this.allstations.filter(this.filterToIn);
-       }
-      validStations = startStations.concat(inStations);
-      return validStations.slice(0, 10).sort(compareStations);
-    }
-  }
-})
-
-// ref: http://stackoverflow.com/a/1293163/2343
-// This will parse a delimited string into an array of
-// arrays. The default delimiter is the comma, but this
-// can be overriden in the second argument.
-function CSVToArray( strData, strDelimiter ){
-    // Check to see if the delimiter is defined. If not,
-    // then default to comma.
-    strDelimiter = (strDelimiter || ",");
-
-    // Create a regular expression to parse the CSV values.
-    var objPattern = new RegExp(
-        (
-            // Delimiters.
-            "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-
-            // Quoted fields.
-            "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-
-            // Standard fields.
-            "([^\"\\" + strDelimiter + "\\r\\n]*))"
-        ),
-        "gi"
-        );
-
-
-    // Create an array to hold our data. Give the array
-    // a default empty first row.
-    var arrData = [[]];
-
-    // Create an array to hold our individual pattern
-    // matching groups.
-    var arrMatches = null;
-
-
-    // Keep looping over the regular expression matches
-    // until we can no longer find a match.
-    while (arrMatches = objPattern.exec( strData )){
-
-        // Get the delimiter that was found.
-        var strMatchedDelimiter = arrMatches[ 1 ];
-
-        // Check to see if the given delimiter has a length
-        // (is not the start of string) and if it matches
-        // field delimiter. If id does not, then we know
-        // that this delimiter is a row delimiter.
-        if (
-            strMatchedDelimiter.length &&
-            strMatchedDelimiter !== strDelimiter
-            ){
-
-            // Since we have reached a new row of data,
-            // add an empty row to our data array.
-            arrData.push( [] );
-
-        }
-
-        var strMatchedValue;
-
-        // Now that we have our delimiter out of the way,
-        // let's check to see which kind of value we
-        // captured (quoted or unquoted).
-        if (arrMatches[ 2 ]){
-
-            // We found a quoted value. When we capture
-            // this value, unescape any double quotes.
-            strMatchedValue = arrMatches[ 2 ].replace(
-                new RegExp( "\"\"", "g" ),
-                "\""
+        })
+        
+        // ref: http://stackoverflow.com/a/1293163/2343
+        // This will parse a delimited string into an array of
+        // arrays. The default delimiter is the comma, but this
+        // can be overriden in the second argument.
+        function CSVToArray( strData, strDelimiter ){
+            // Check to see if the delimiter is defined. If not,
+            // then default to comma.
+            strDelimiter = (strDelimiter || ",");
+        
+            // Create a regular expression to parse the CSV values.
+            var objPattern = new RegExp(
+                (
+                    // Delimiters.
+                    "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+        
+                    // Quoted fields.
+                    "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+        
+                    // Standard fields.
+                    "([^\"\\" + strDelimiter + "\\r\\n]*))"
+                ),
+                "gi"
                 );
-
-        } else {
-
-            // We found a non-quoted value.
-            strMatchedValue = arrMatches[ 3 ];
-
+        
+        
+            // Create an array to hold our data. Give the array
+            // a default empty first row.
+            var arrData = [[]];
+        
+            // Create an array to hold our individual pattern
+            // matching groups.
+            var arrMatches = null;
+        
+        
+            // Keep looping over the regular expression matches
+            // until we can no longer find a match.
+            while (arrMatches = objPattern.exec( strData )){
+        
+                // Get the delimiter that was found.
+                var strMatchedDelimiter = arrMatches[ 1 ];
+        
+                // Check to see if the given delimiter has a length
+                // (is not the start of string) and if it matches
+                // field delimiter. If id does not, then we know
+                // that this delimiter is a row delimiter.
+                if (
+                    strMatchedDelimiter.length &&
+                    strMatchedDelimiter !== strDelimiter
+                    ){
+        
+                    // Since we have reached a new row of data,
+                    // add an empty row to our data array.
+                    arrData.push( [] );
+        
+                }
+        
+                var strMatchedValue;
+        
+                // Now that we have our delimiter out of the way,
+                // let's check to see which kind of value we
+                // captured (quoted or unquoted).
+                if (arrMatches[ 2 ]){
+        
+                    // We found a quoted value. When we capture
+                    // this value, unescape any double quotes.
+                    strMatchedValue = arrMatches[ 2 ].replace(
+                        new RegExp( "\"\"", "g" ),
+                        "\""
+                        );
+        
+                } else {
+        
+                    // We found a non-quoted value.
+                    strMatchedValue = arrMatches[ 3 ];
+        
+                }
+        
+        
+                // Now that we have our value string, let's add
+                // it to the data array.
+                arrData[ arrData.length - 1 ].push( strMatchedValue );
+            }
+        
+            // Return the parsed data.
+            return( arrData );
         }
-
-
-        // Now that we have our value string, let's add
-        // it to the data array.
-        arrData[ arrData.length - 1 ].push( strMatchedValue );
-    }
-
-    // Return the parsed data.
-    return( arrData );
-}
-
-function to_station(station){
-  return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4],"x":station[5],"y":station[6]};
-}
-
-function get_stations(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'exstops.txt');
-  xhr.onreadystatechange = function () {
-    var DONE = 4; // readyState 4 means the request is done.
-    var OK = 200; // status 200 is a successful return.
-    if (xhr.readyState === DONE) {
-      if (xhr.status === OK)
-        stations = CSVToArray(xhr.responseText, ",").filter(station => station[0]!=="");
-        yathra.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
-      } else {
-         // An error occurred during the request.
-      }
-    }
-  xhr.send(null);
-}
-get_stations();
-
-function to_operator(row){
-  return {"id":row[0],"name":row[1],"url":row[2]};
-}
-
-function get_operators(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'agency.txt');
-  xhr.onreadystatechange = function () {
-    var DONE = 4; // readyState 4 means the request is done.
-    var OK = 200; // status 200 is a successful return.
-    if (xhr.readyState === DONE) {
-      if (xhr.status === OK)
-        operators = CSVToArray(xhr.responseText, ",").filter(row => row[0]!=="");
-        operators.slice(1).forEach(function(data){yathra.$set(yathra.alloperators, data[0], {"name":data[1], "url":data[2]})});
-      } else {
-         // An error occurred during the request.
-      }
-    }
-  xhr.send(null);
-}
-get_operators();
-
-function get_areas(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'areas.json');
-  xhr.onreadystatechange = function () {
-    var DONE = 4; // readyState 4 means the request is done.
-    var OK = 200; // status 200 is a successful return.
-    if (xhr.readyState === DONE) {
-      if (xhr.status === OK)
-        yathra.areas = JSON.parse(xhr.responseText);
-      } else {
-         // An error occurred during the request.
-      }
-    }
-  xhr.send(null);
-}
-get_areas();
-
-function compareStations(a, b) {
-  var nameA = a.id.toUpperCase();
-  var nameB = b.id.toUpperCase();
-  if (nameA < nameB) {
-    return -1;
-  }
-  if (nameA > nameB) {
-    return 1;
-  }
-  return 0;
-}
-
-try{
-  list = JSON.parse(localStorage.getItem("searches_list"));
-  if(list != null){
-    yathra.searches = list;
-    restore_search(searches.searches[0]);
-  }
-}
-catch(a){
-}
-
-try{
-  list = JSON.parse(localStorage.getItem("trips_list"));
-  if(list != null){
-    yathra.trips = list;
-  }
-
-}
-catch(a){
-}
-  </script>
+        
+        function to_station(station){
+          return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4],"x":station[5],"y":station[6]};
+        }
+        
+        function get_stations(){
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', 'exstops.txt');
+          xhr.onreadystatechange = function () {
+            var DONE = 4; // readyState 4 means the request is done.
+            var OK = 200; // status 200 is a successful return.
+            if (xhr.readyState === DONE) {
+              if (xhr.status === OK)
+                stations = CSVToArray(xhr.responseText, ",").filter(station => station[0]!=="");
+                yathra.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
+              } else {
+                 // An error occurred during the request.
+              }
+            }
+          xhr.send(null);
+        }
+        get_stations();
+        
+        function to_operator(row){
+          return {"id":row[0],"name":row[1],"url":row[2]};
+        }
+        
+        function get_operators(){
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', 'agency.txt');
+          xhr.onreadystatechange = function () {
+            var DONE = 4; // readyState 4 means the request is done.
+            var OK = 200; // status 200 is a successful return.
+            if (xhr.readyState === DONE) {
+              if (xhr.status === OK)
+                operators = CSVToArray(xhr.responseText, ",").filter(row => row[0]!=="");
+                operators.slice(1).forEach(function(data){yathra.$set(yathra.alloperators, data[0], {"name":data[1], "url":data[2]})});
+              } else {
+                 // An error occurred during the request.
+              }
+            }
+          xhr.send(null);
+        }
+        get_operators();
+        
+        function get_areas(){
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', 'areas.json');
+          xhr.onreadystatechange = function () {
+            var DONE = 4; // readyState 4 means the request is done.
+            var OK = 200; // status 200 is a successful return.
+            if (xhr.readyState === DONE) {
+              if (xhr.status === OK)
+                yathra.areas = JSON.parse(xhr.responseText);
+              } else {
+                 // An error occurred during the request.
+              }
+            }
+          xhr.send(null);
+        }
+        get_areas();
+        
+        function compareStations(a, b) {
+          var nameA = a.id.toUpperCase();
+          var nameB = b.id.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        }
+        
+        try{
+          list = JSON.parse(localStorage.getItem("searches_list"));
+          if(list != null){
+            yathra.searches = list;
+            restore_search(searches.searches[0]);
+          }
+        }
+        catch(a){
+        }
+        
+        try{
+          list = JSON.parse(localStorage.getItem("trips_list"));
+          if(list != null){
+            yathra.trips = list;
+          }
+        
+        }
+        catch(a){
+        }
+          
+    </script>
 </html>
