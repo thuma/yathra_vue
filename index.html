@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div class="row" >
-                <div class="col-lg-4 col-md-6 p-1">
+                <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text">Från</span>
@@ -40,12 +40,14 @@
                             </div>
                         </div>
                         <input type="text" class="form-control" v-model="from">
-                        <div class="input-group-appendend">
-                            <button type="button" class="btn btn-secondary" v-on:click="switch_from_to">⇄</button>
-                        </div>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 p-1">
+                <div class="col-lg-1 col-md-2 p-1">
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-block" v-on:click="switch_from_to">⇄</button>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text">Till</span>
@@ -56,7 +58,7 @@
                         <input type="text" class="form-control" v-model="to">
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 p-1">
+                <div class="col-lg-4 col-md-6 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text">Tid</span>
@@ -70,63 +72,92 @@
             </div>
             <hr>
             <div class="row">
-                <div class="col-lg-12 p-1">
-                    <div v-if="timetables.length > 0">
-                        <ul class="list-group">
-                            <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
-                                <div class="mx-auto" style="width: fit-content;">
-                                    Sök resor före {{ timetablesFirstTime }}
-                                </div>
-                            </li>
-                            <li v-for="trip, i in sortBySelected" class="list-group-item">
-                                <div class="row">
-                                    <div class="col-lg-2 p-0">
-                                        <span v-on:click="detailsToggle(trip)">
-                                        <span title="Avgång och ankomst"> {{ travelDate(trip) }}
-                                        {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} -
-                                        {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
-                                    </div>
-                                    <div class="col-lg-1 p-0">
-                                        <span title="Restid">{{ travelTime(trip.LegList.Leg) }}</span>
-                                    </div>
-                                    <div class="col-lg-1 p-0">
-                                        <span title="Pris" v-if="totallowestprice(trip) < 999999">
-                                        {{ totallowestprice(trip) }} kr
-                                        </span>
-                                    </div>
-                                    <div class="col-lg-1 p-0">
-                                        <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} | </span>
-                                    </div>
-                                    <div class="col-lg-7 p-0">
-                                        <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="'/images_no_fallback/'+operatorid+'.jpg'" >
-                                    </div>
-                                    <div class="col-lg-12 p-0">
-                                        <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
-                                            <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
-                                                {{ leg.Origin.time }} {{ leg.Origin.name }} - 
-                                                {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
-                                                {{ catToIcon[leg.Product.catCode] }} </span>
-                                                <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
-                                                <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
-                                                </a>
-                                                <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">
-                                                    {{ ifprice(leg) }} SEK</a>
-                                            </div>
-                                        </div>
-                                        <div class="btn-group" v-if="trip.showAllStops">
-                                        <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                            <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
-                                <div class="mx-auto" style="width: fit-content;" >
-                                    Sök resor efter {{ timetablesLastTime }}
-                                </div>
-                            </li>
-                        </ul>
-                        <hr>
+                <div class="col-lg-12 p-1" v-if="timetables.length > 0">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" v-on:click="if(sortList=='show'){sortList=''}else{sortList='show'}" type="button">
+                            Sorterar på {{ sortedAsText }}
+                        </button>
+                        <div class="dropdown-menu" v-bind:class="sortList">
+                            <a v-for="(text, name) in sortOpts" class="dropdown-item" v-on:click="sortBy=name;sortList=''" href="#">{{ text }}</a>
+                        </div>
                     </div>
+                </div>
+                <div class="col-lg-12 p-1" v-if="timetables.length > 0">
+                    <ul class="list-group">
+                        <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
+                            <div class="mx-auto" style="width: fit-content;">
+                                Sök resor före {{ timetablesFirstTime }}
+                            </div>
+                        </li>
+                        <li class="list-group-item d-none d-md-block">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 p-0">
+                                    Avgång - Ankomst
+                                </div>
+                                <div class="col-lg-1 col-md-3 p-0">
+                                    Restid
+                                </div>
+                                <div class="col-lg-1 col-md-3 p-0">
+                                    Pris
+                                </div>
+                                <div class="col-lg-1 col-md-2 p-0">
+                                    Byten
+                                </div>
+                                <div class="col-lg-5 col-md-12 p-0 d-none d-lg-block">
+                                    Operatörer
+                                </div>
+                            </div>
+                        </li>
+                        <li v-for="trip, i in sortBySelected" class="list-group-item">
+                            <div class="row">
+                                <div class="col-lg-3 col-md-4 p-0">
+                                    <span v-on:click="detailsToggle(trip)">
+                                    <span title="Avgång och ankomst"> {{ travelDate(trip) }}
+                                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} -
+                                    {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
+                                </div>
+                                <div class="col-lg-1 col-md-3 p-0">
+                                    <span title="Restid">{{ travelTime(trip.LegList.Leg) }}</span>
+                                </div>
+                                <div class="col-lg-1 col-md-3 p-0">
+                                    <span title="Pris" v-if="totallowestprice(trip) < 999999">
+                                    {{ totallowestprice(trip) }} kr
+                                    </span>
+                                </div>
+                                <div class="col-lg-1 col-md-2 p-0">
+                                    <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} </span>
+                                </div>
+                                <div class="col-lg-6 p-0 d-none d-lg-block">
+                                    <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="'/images_no_fallback/'+operatorid+'.jpg'" >
+                                </div>
+                                <div class="col-lg-12 p-0">
+                                    <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
+                                        <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
+                                            {{ leg.Origin.time }} {{ leg.Origin.name }} - 
+                                            {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
+                                            {{ catToIcon[leg.Product.catCode] }} </span>
+                                            <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
+                                            <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
+                                            </a>
+                                            <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">
+                                                {{ ifprice(leg) }} SEK</a>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group" v-if="trip.showAllStops">
+                                    <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
+                            <div class="mx-auto" style="width: fit-content;" >
+                                Sök resor efter {{ timetablesLastTime }}
+                            </div>
+                        </li>
+                    </ul>
+                    <hr>
+                </div>
+                <div class="col-lg-12 p-1">
                     <div class="card">
                         <div class="card-body">
                             <h5 class="text-center">Priser från</h5>
@@ -187,22 +218,27 @@
               "7":"🚍",
               "8":"⛴}"
             },
+            sortList: "",
             from:"",
             from_station: {"id":"","name":""},
             to:"",
             to_station: {"id":"","name":""},
-            date:now.toISOString().substring(0,10),
+            date:now.toISOString().substring(0,16),
             allstations: [],
             alloperators: {},
-            time_slider: "600",
             searches: [],
             scrB: "",
             scrF: "",
-            dtime: "09:00",
             timetables: [],
             sortBy: "price",
             trips: [],
             areas: {},
+            sortOpts: { 
+                "price":"Lägsta pris",
+                "time":"Kortast restid",
+                "changes":"Minst antal byten",
+                "depTime":"Efter avgångstid",
+                "arrTime":"Efter ankomsttid"},
             price: {"oretag":{}},
         	operators: ["74","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
         	traveltypes: {}
@@ -477,6 +513,9 @@
         	});
           },
           computed: {
+            sortedAsText: function(){
+                return this.sortOpts[this.sortBy];
+            },
             timetablesFirstTime: function(){
             return this.timetables[0].LegList.Leg[0].Origin.date + 
               " " +
