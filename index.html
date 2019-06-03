@@ -91,13 +91,16 @@
                         </li>
                         <li class="list-group-item d-none d-md-block">
                             <div class="row">
-                                <div class="col-lg-3 col-md-4 p-0">
-                                    Avgång - Ankomst
+                                <div class="col-lg-2 col-md-4 p-0">
+                                    Avgång
                                 </div>
-                                <div class="col-lg-1 col-md-3 p-0">
+                                <div class="col-lg-1 col-md-2 p-0">
+                                    Ankomst
+                                </div>
+                                <div class="col-lg-1 col-md-2 p-0">
                                     Restid
                                 </div>
-                                <div class="col-lg-1 col-md-3 p-0">
+                                <div class="col-lg-1 col-md-2 p-0">
                                     Pris
                                 </div>
                                 <div class="col-lg-1 col-md-2 p-0">
@@ -110,16 +113,19 @@
                         </li>
                         <li v-for="trip, i in sortBySelected" class="list-group-item">
                             <div class="row">
-                                <div class="col-lg-3 col-md-4 p-0">
+                                <div class="col-lg-2 col-md-4 p-0">
                                     <span v-on:click="detailsToggle(trip)">
                                     <span title="Avgång och ankomst"> {{ travelDate(trip) }}
-                                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }} -
-                                    {{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
+                                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }}
+                                    </span>
                                 </div>
-                                <div class="col-lg-1 col-md-3 p-0">
+                                <div class="col-lg-1 col-md-2 p-0">
+                                    <span title="Ankomst">{{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
+                                </div>
+                                <div class="col-lg-1 col-md-2 p-0">
                                     <span title="Restid">{{ travelTime(trip.LegList.Leg) }}</span>
                                 </div>
-                                <div class="col-lg-1 col-md-3 p-0">
+                                <div class="col-lg-1 col-md-2 p-0">
                                     <span title="Pris" v-if="totallowestprice(trip) < 999999">
                                     {{ totallowestprice(trip) }} kr
                                     </span>
