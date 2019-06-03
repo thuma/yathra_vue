@@ -63,6 +63,14 @@ def StopIdToName(id):
     return {"id":"24521"} #T4
   elif id == "740043310":
     return {"id":"16908"} #T5
+  elif id == "800022985":
+    return {"id":"88"} #Berlin TXL
+  elif id == "800034479":
+    return {"id":"88"} #Berlin ZOB
+  elif id == "800090400":
+    return {"id":"118"} #Hamburg ZOB/Bus-Port
+  elif id == "860024917":
+    return {"id":"1905"} #Köbenhavn Ingerslevsgade
 
   for row in db.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
     position = {

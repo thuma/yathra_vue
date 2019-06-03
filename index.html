@@ -89,48 +89,56 @@
                                 Sök resor före {{ timetablesFirstTime }}
                             </div>
                         </li>
-                        <li class="list-group-item d-none d-md-block">
+                        <li class="list-group-item d-none d-sm-block">
                             <div class="row">
-                                <div class="col-lg-2 col-md-4 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
+                                    Datum
+                                </div>
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     Avgång
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     Ankomst
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     Restid
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     Pris
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     Byten
                                 </div>
-                                <div class="col-lg-5 col-md-12 p-0 d-none d-lg-block">
+                                <div class="col-lg-5 col-sm-12 p-0 d-none d-lg-block">
                                     Operatörer
                                 </div>
                             </div>
                         </li>
                         <li v-for="trip, i in sortBySelected" class="list-group-item">
                             <div class="row">
-                                <div class="col-lg-2 col-md-4 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     <span v-on:click="detailsToggle(trip)">
-                                    <span title="Avgång och ankomst"> {{ travelDate(trip) }}
+                                    <span title="Avgång dag"> {{ travelDate(trip) }}
+                                    </span>
+                                </div>
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
+                                    <span v-on:click="detailsToggle(trip)">
+                                    <span title="Avgång tid">
                                     {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }}
                                     </span>
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
-                                    <span title="Ankomst">{{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
+                                    <span title="Ankomst tid">{{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     <span title="Restid">{{ travelTime(trip.LegList.Leg) }}</span>
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     <span title="Pris" v-if="totallowestprice(trip) < 999999">
                                     {{ totallowestprice(trip) }} kr
                                     </span>
                                 </div>
-                                <div class="col-lg-1 col-md-2 p-0">
+                                <div class="col-lg-1 col-sm-2 p-0">
                                     <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} </span>
                                 </div>
                                 <div class="col-lg-6 p-0 d-none d-lg-block">
@@ -226,9 +234,9 @@
             },
             sortList: "",
             from:"",
-            from_station: {"id":"","name":""},
+            from_station: {"id":"","name":"","scbid":""},
             to:"",
-            to_station: {"id":"","name":""},
+            to_station: {"id":"","name":"","scbid":""},
             date:now.toISOString().substring(0,16),
             allstations: [],
             alloperators: {},
@@ -711,7 +719,7 @@
         }
         
         function to_station(station){
-          return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4],"x":station[5],"y":station[6]};
+          return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4]};
         }
         
         function get_stations(){
