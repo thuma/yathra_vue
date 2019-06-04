@@ -11,6 +11,14 @@ travelCats = {
     "RB":"Rabatterat"
 }
 
+stops = sqlite3.connect('stops')
+
+def getLocationPos(id):
+  for row in stops.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
+    lat = row[0]
+    lon = row[1]
+  return {"lat":lat, "lon":lon}
+
 @post('/api/v1/buy')
 def cats():
     response.content_type = 'application/json'
@@ -42,6 +50,26 @@ def search():
     #        "latestArrival": "2019-07-01T16:05:00Z" 
     #    }
     #}
+    opos = getLocationPos(search["route"][0]["stopId"])
+    dpos = getLocationPos(search["route"][-1]["stopId"])
+    
+    
+    search["temporal"]["earliestDepature"]
+    
+
+    
+    parameters = {
+        "date":"2019-06-10",
+        "time":"12:00",
+        "originCoordLat":opos['lat'],
+        "originCoordLong":opos['lon'],
+        "destCoordLat":dpos['lat'],
+        "destCoordLong":dpos['lon'],
+        "key":"",
+        "lang":"se"
+    }
+    result = requests.get("https://api.sl.se/api2/TravelplannerV3_1/trip.json?"+urlencode(parameters))
+    print result.json()
 
     products = []
     for trip in ["one"]:

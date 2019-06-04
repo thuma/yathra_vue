@@ -4,12 +4,15 @@
 import requests, json, sqlite3, datetime, urllib, rt90
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
+from ConfigParser import ConfigParser
 
 travelCats = {
     "VU":"Vuxen",
     "UN":"Ungdom (7-19 år)"
 }
 
+config = ConfigParser()
+config.read('../../settings.ini')
 
 stops = sqlite3.connect('stops')
 
@@ -77,10 +80,17 @@ def search():
     #        "latestArrival": "2019-07-01T16:05:00Z" 
     #    }
     #}
+    
+    
+
+    
     fromdata = StopIdToData(search["route"][0]["stopId"])
     todata = StopIdToData(search["route"][-1]["stopId"])
     
-    headers = {"Authorization": "Bearer 1c806ebc-d119-3aca-8061-77210481408e"}
+    auth = ( config.get("vasttrafik","key"), config.get("vasttrafik","secret"))
+    code = requests.post("https://api.vasttrafik.se:443/token", auth = auth, data={"grant_type":"client_credentials","scope":"pris"})
+
+    headers = {"Authorization": "Bearer " + code.json()["access_token"]}
     params = {
         "originCoordLat":fromdata["lat"],
         "originCoordLong":fromdata["lon"],
@@ -93,7 +103,7 @@ def search():
         "format":"json"
     }
     location = requests.get("https://api.vasttrafik.se/bin/rest.exe/v2/trip", params=params, headers=headers)
-    print location.json()
+
     data = location.json()["TripList"]["Trip"][0]["Leg"]
     headers = {
         "atok1":"HfMhQQbm8PBL182tYwrDFWfQDpelbAzBX9EkBBzZgt2IbUQNkPw31BHSfpAe9MRzWUeQew421jaDEtOiP1hlPfiniKVIjJWtdHXtKqDop4I1",
@@ -101,7 +111,6 @@ def search():
     result = requests.post('https://www.vasttrafik.se/api/travelplanner/v2/price', headers=headers, json={"leg":data})
   
     products = []
-    print result.json()
     for trip in result.json():
         pricelist = []
         url = "https://www.vasttrafik.se/biljetter/enkelbiljetter/"
@@ -109,8 +118,8 @@ def search():
         vat = pris*0.06
         pricelist.append({
             "productId": url,
-            "productTitle": "Enkelbiljett APP",
-            "productDescription": "Bokas i appen",
+            "productTitle": trip["name"],
+            "productDescription": "Köps av västtrafik",
             "fares": [
                 {
                     "amount": pris,
@@ -124,8 +133,11 @@ def search():
             },
             "travellersPerCategory": search["travellersPerCategory"]
         })
-        products.append(pricelist)
-        response.content_type = 'application/json'
-        return json.dumps(products)
+        if search["travellersPerCategory"][0]["cat"] == "VU" and "Vuxen" in trip["name"]:
+            products.append(pricelist)
+        elif search["travellersPerCategory"][0]["cat"] == "UN" and "Ungdom" in trip["name"]:
+            products.append(pricelist)
+    response.content_type = 'application/json'
+    return json.dumps(products)
 
 run(host='127.0.0.1', port=8091, reloader=True)

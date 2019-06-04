@@ -154,7 +154,7 @@
                                             <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
                                             </a>
                                             <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">
-                                                {{ ifprice(leg) }} SEK</a>
+                                                {{ ifdesc(leg) }} för {{ ifprice(leg) }} SEK</a>
                                         </div>
                                     </div>
                                     <div class="btn-group" v-if="trip.showAllStops">
@@ -254,7 +254,7 @@
                 "depTime":"Efter avgångstid",
                 "arrTime":"Efter ankomsttid"},
             price: {"oretag":{}},
-        	operators: ["74","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
+        	operators: ["74","279","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
         	traveltypes: {}
           },
           methods: {
@@ -346,6 +346,14 @@
             ifprice: function(leg){
         		try{
         		  return leg.price[0][0].fares[0].amount;
+        		}
+        		catch(e){
+        		  return "";
+        		}
+        	},
+            ifdesc: function(leg){
+        		try{
+        		  return leg.price[0][0].productTitle;
         		}
         		catch(e){
         		  return "";
