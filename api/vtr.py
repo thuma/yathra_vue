@@ -43,11 +43,19 @@ def stringToUnixTS(string):
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
 def StopIdToData(id):
+  exid = ""
   for row in stops.execute("SELECT stop_lat,stop_lon,stop_name FROM stops WHERE stop_id = %s" % id):
     lat = row[0]
     lon = row[1]
     name = row[2]
-  return {"name":name, "lat":lat, "lon":lon}
+  for row in stops.execute("SELECT * FROM astops WHERE agency_id = 279 AND stop_id = %s" % id):
+    exid =  row[2]
+
+  vtid = 9021014000000000
+  exid = int(exid)*1000
+  vtid += exid
+
+  return {"name":name, "lat":lat, "lon":lon, "id":vtid}
  
 @post('/api/v1/buy')
 def cats():
@@ -81,9 +89,6 @@ def search():
     #    }
     #}
     
-    
-
-    
     fromdata = StopIdToData(search["route"][0]["stopId"])
     todata = StopIdToData(search["route"][-1]["stopId"])
     
@@ -92,9 +97,11 @@ def search():
 
     headers = {"Authorization": "Bearer " + code.json()["access_token"]}
     params = {
+        "originId":fromdata["id"],
         "originCoordLat":fromdata["lat"],
         "originCoordLong":fromdata["lon"],
         "originCoordName":fromdata["name"],
+        "destId":todata["id"],
         "destCoordLat":todata["lat"],
         "destCoordLong":todata["lon"],
         "destCoordName":todata["name"],
@@ -103,13 +110,14 @@ def search():
         "format":"json"
     }
     location = requests.get("https://api.vasttrafik.se/bin/rest.exe/v2/trip", params=params, headers=headers)
-
     data = location.json()["TripList"]["Trip"][0]["Leg"]
+
     headers = {
-        "atok1":"HfMhQQbm8PBL182tYwrDFWfQDpelbAzBX9EkBBzZgt2IbUQNkPw31BHSfpAe9MRzWUeQew421jaDEtOiP1hlPfiniKVIjJWtdHXtKqDop4I1",
-        "atok2":"9eY5tb5uxJ2OMg1bQ0qPuEJx12EDNMHvwQ-r8OWy2VX8skm2oHywE99-hWj-J_1GCiICN7tN7Sy_aaXJ05k8nmg1JAi8elxtOWhuUx8YdtI1"}
+        "atok1":"CvbNODKjS890aMbOWc3mWPB1moL73D25DzCczI57dQsViGWPgPuRzWHWBIU1cWoaOkYRMS6U0ymwAE6nFLgFLPoW9CeAZ4LK-gHI5OftaOY1",
+        "atok2":"FaThPf2Mbt9vphriIwZ-EizUpErMw687i6ellV56BTGUbXnl9LUEMdWk4gTvTQaMXx41P6aFC84cCxRdBFB2rG8e-BzrLYXM4LtN2eXmN9w1"}
     result = requests.post('https://www.vasttrafik.se/api/travelplanner/v2/price', headers=headers, json={"leg":data})
   
+    print result.content;
     products = []
     for trip in result.json():
         pricelist = []
