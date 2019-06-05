@@ -54,7 +54,6 @@ def StopIdToData(id):
   vtid = 9021014000000000
   exid = int(exid)*1000
   vtid += exid
-
   return {"name":name, "lat":lat, "lon":lon, "id":vtid}
  
 @post('/api/v1/buy')
@@ -111,13 +110,14 @@ def search():
     }
     location = requests.get("https://api.vasttrafik.se/bin/rest.exe/v2/trip", params=params, headers=headers)
     data = location.json()["TripList"]["Trip"][0]["Leg"]
-
+    if not isinstance(data, (list,)):
+      data = [data]
     headers = {
         "atok1":"CvbNODKjS890aMbOWc3mWPB1moL73D25DzCczI57dQsViGWPgPuRzWHWBIU1cWoaOkYRMS6U0ymwAE6nFLgFLPoW9CeAZ4LK-gHI5OftaOY1",
         "atok2":"FaThPf2Mbt9vphriIwZ-EizUpErMw687i6ellV56BTGUbXnl9LUEMdWk4gTvTQaMXx41P6aFC84cCxRdBFB2rG8e-BzrLYXM4LtN2eXmN9w1"}
     result = requests.post('https://www.vasttrafik.se/api/travelplanner/v2/price', headers=headers, json={"leg":data})
   
-    print result.content;
+    print result.content
     products = []
     for trip in result.json():
         pricelist = []
