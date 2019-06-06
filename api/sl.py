@@ -5,19 +5,34 @@ import requests, json, sqlite3, datetime, urllib, math
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
 from urllib import urlencode, quote_plus
+from ConfigParser import ConfigParser
+import slstops
 
 travelCats = {
     "VU":"Vuxen",
     "RB":"Rabatterat"
 }
 
+config = ConfigParser()
+config.read('../../settings.ini')
+
 stops = sqlite3.connect('stops')
 
 def getLocationPos(id):
-  for row in stops.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
+  for row in stops.execute("SELECT stop_lat,stop_lon,stop_name FROM stops WHERE stop_id = %s" % id):
     lat = row[0]
     lon = row[1]
-  return {"lat":lat, "lon":lon}
+    name = row[2]
+  for row in stops.execute("SELECT * FROM astops WHERE agency_id = 275 AND stop_id = %s" % id):
+    exid =  row[2]
+  exid = slstops.getByArea(exid)
+  return {"name":name, "lat":lat, "lon":lon, "id":exid}
+
+def utcIsoToLocalSlDate(datedate):
+   return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%Y-%m-%d")
+ 
+def utcIsoToLocalSlTime(datedate):
+   return (parser.parse(datedate).astimezone(tz.gettz("Europe/Stockholm"))-datetime.timedelta(minutes=10)).strftime("%H:%M")
 
 @post('/api/v1/buy')
 def cats():
@@ -53,37 +68,54 @@ def search():
     opos = getLocationPos(search["route"][0]["stopId"])
     dpos = getLocationPos(search["route"][-1]["stopId"])
     
-    
-    search["temporal"]["earliestDepature"]
-    
-
-    
     parameters = {
-        "date":"2019-06-10",
-        "time":"12:00",
-        "originCoordLat":opos['lat'],
-        "originCoordLong":opos['lon'],
-        "destCoordLat":dpos['lat'],
-        "destCoordLong":dpos['lon'],
-        "key":"",
+        "date":utcIsoToLocalSlDate(search["temporal"]["earliestDepature"]),
+        "time":utcIsoToLocalSlTime(search["temporal"]["earliestDepature"]),
+        "originId":opos['id'],
+        #"originCoordLat":opos['lat'],
+        #"originCoordLong":opos['lon'],
+        "destId":dpos['id'],
+        #"destCoordLat":dpos['lat'],
+        #"destCoordLong":dpos['lon'],
+        "key":config.get("sl","key"),
         "lang":"se"
     }
     result = requests.get("https://api.sl.se/api2/TravelplannerV3_1/trip.json?"+urlencode(parameters))
-    print result.json()
-
+    
     products = []
     for trip in ["one"]:
       pricelist = []
-      for type in ["one"]:
+      for type in [0,1]:
+        name = ["Reskassa", "Butik"]
+        
+        if result.json()["Trip"][0]["TariffResult"]["fareSetItem"][0]["fareItem"][0]["name"] == 'MESSAGE':
+            if result.json()["Trip"][0]["TariffResult"]["fareSetItem"][0]["fareItem"][0]["desc"] == 'TEXT_RULE03':
+                pris = 15200
+                url = "https://sl.se/sv/kop-biljett/"
+            elif result.json()["Trip"][0]["TariffResult"]["fareSetItem"][0]["fareItem"][0]["desc"] == 'TEXT_RULE10':
+                if "740000559" in [search["route"][0]["stopId"],search["route"][-1]["stopId"]] and "740000005" not in [search["route"][0]["stopId"],search["route"][-1]["stopId"]]:
+                     pris = 6400
+                     url = "https://www.ul.se/biljetter/reskassa/vuxen/"
+                if "740000559" in [search["route"][0]["stopId"],search["route"][-1]["stopId"]] and "740000005" in [search["route"][0]["stopId"],search["route"][-1]["stopId"]]:
+                     pris = 5000
+                     url = "https://www.ul.se/biljetter/reskassa/vuxen/"
+                else:
+                     pris = 9600
+                url = "https://sl.se/sv/kop-biljett/"
+            else:
+                print result.json()["Trip"][0]["TariffResult"]["fareSetItem"][0]["fareItem"][0]["desc"]
+                pris = 9600
+                url = "https://sl.se/sv/kop-biljett/"
+        else:
+            pris  = result.json()["Trip"][0]["TariffResult"]["fareSetItem"][0]["fareItem"][type]["price"]
         pricelist.append({
-            "productId": "id1",
-            "productTitle": "Biljett",
-            "productDescription": "Reskassa Vuxen enkel",
+            "productId": url,
+            "productTitle": name[type] + " Vuxen",
             "fares": [
                 {
-                    "amount": 32,
+                    "amount": pris/100,
                     "currency": "SEK",
-                    "vatAmount": round(32*0.06,2),
+                    "vatAmount": round(pris/100*0.06,2),
                     "vatPercent": 6
                 }
             ],

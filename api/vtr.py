@@ -113,8 +113,8 @@ def search():
     if not isinstance(data, (list,)):
       data = [data]
     headers = {
-        "atok1":"CvbNODKjS890aMbOWc3mWPB1moL73D25DzCczI57dQsViGWPgPuRzWHWBIU1cWoaOkYRMS6U0ymwAE6nFLgFLPoW9CeAZ4LK-gHI5OftaOY1",
-        "atok2":"FaThPf2Mbt9vphriIwZ-EizUpErMw687i6ellV56BTGUbXnl9LUEMdWk4gTvTQaMXx41P6aFC84cCxRdBFB2rG8e-BzrLYXM4LtN2eXmN9w1"}
+        "atok1":config.get("vasttrafik","atok1"),
+        "atok2":config.get("vasttrafik","atok2")}
     result = requests.post('https://www.vasttrafik.se/api/travelplanner/v2/price', headers=headers, json={"leg":data})
   
     print result.content
