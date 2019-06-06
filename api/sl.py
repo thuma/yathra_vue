@@ -26,6 +26,8 @@ def getLocationPos(id):
   for row in stops.execute("SELECT * FROM astops WHERE agency_id = 275 AND stop_id = %s" % id):
     exid =  row[2]
   exid = slstops.getByArea(exid)
+  if id == "740001617":
+    exid = "1080"
   return {"name":name, "lat":lat, "lon":lon, "id":exid}
 
 def utcIsoToLocalSlDate(datedate):
@@ -108,6 +110,7 @@ def search():
                 url = "https://sl.se/sv/kop-biljett/"
         else:
             pris  = result.json()["Trip"][0]["TariffResult"]["fareSetItem"][0]["fareItem"][type]["price"]
+            url = "https://sl.se/sv/kop-biljett/"
         pricelist.append({
             "productId": url,
             "productTitle": name[type] + " Vuxen",
