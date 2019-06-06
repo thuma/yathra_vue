@@ -149,7 +149,7 @@
                                         <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
                                             {{ leg.Origin.time }} {{ leg.Origin.name }} - 
                                             {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
-                                            {{ catToIcon[leg.Product.catCode] }} </span>
+                                            <span v-bind:title="catToName[leg.Product.catCode]">{{ catToIcon[leg.Product.catCode] }} </span>
                                             <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
                                             <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
                                             </a>
@@ -230,7 +230,17 @@
               "5":"🚇",
               "6":"🚋",
               "7":"🚍",
-              "8":"⛴}"
+              "8":"⛴"
+            },
+            catToName:{
+              "1":"Snabbtåg",
+              "2":"Reginaltåg",
+              "3":"Expressbuss",
+              "4":"Lokaltåg",
+              "5":"Tunnelbaka",
+              "6":"Spårvagn",
+              "7":"Buss",
+              "8":"Färja"
             },
             sortList: "",
             from:"",
@@ -254,7 +264,7 @@
                 "depTime":"Efter avgångstid",
                 "arrTime":"Efter ankomsttid"},
             price: {"oretag":{}},
-        	operators: ["74","287","279","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
+        	operators: ["74","287","619","279","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
         	traveltypes: {}
           },
           methods: {
