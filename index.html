@@ -171,12 +171,9 @@
                         <li v-for="trip, i in sortBySelected" class="list-group-item">
                             <div class="row">
                                 <div class="col-lg-1 col-sm-2 col-4 p-0">
-                                    <span v-on:click="detailsToggle(trip)">
-                                    <span title="Avgång dag"> {{ travelDate(trip) }}
-                                    </span>
+                                    <span title="Avgång dag"> {{ travelDate(trip) }}</span>
                                 </div>
                                 <div class="col-lg-1 col-sm-2 col-4 p-0">
-                                    <span v-on:click="detailsToggle(trip)">
                                     <span title="Avgång tid">
                                     {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }}
                                     </span>
@@ -193,7 +190,7 @@
                                     </span>
                                 </div>
                                 <div class="col-lg-1 col-sm-2 p-0">
-                                    <span title="Antal byte">⇄ {{ changes(trip.LegList.Leg) }} </span>
+                                    <button v-on:click="detailsToggle(trip)" class="btn btn-secondary btn-sm">⇄ {{ changes(trip.LegList.Leg) }} </button>
                                 </div>
                                 <div class="col-lg-6 p-0 d-none d-lg-block">
                                     <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="'/images_no_fallback/'+operatorid+'.jpg'" >
@@ -330,7 +327,7 @@
             scrB: "",
             scrF: "",
             timetables: [],
-            sortBy: "price",
+            sortBy: "best",
             trips: [],
             areas: {},
             sortOpts: { 
@@ -338,7 +335,9 @@
                 "time":"Kortast restid",
                 "changes":"Minst antal byten",
                 "depTime":"Efter avgångstid",
-                "arrTime":"Efter ankomsttid"},
+                "arrTime":"Efter ankomsttid",
+                "best":"Bästa resan"
+                },
             price: {"oretag":{}},
             operators: ["74","287","619","279","251","364","642","644","480","365","374","361","367","821","812","300","276","838","328","327","310","358","626","391","256","653","513","357","275","253"],
             traveltypes: {}
@@ -719,6 +718,25 @@
                         return 1;
                     return 0
                 }
+                function compareBest(a, b) {
+                    aprice = main.totallowestprice(a)
+                    bprice = main.totallowestprice(b)
+                    
+                    achanges = main.changes(a.LegList.Leg);
+                    bchanges = main.changes(b.LegList.Leg);
+                    
+                    atime = main.travelTimeMS(a.LegList.Leg)
+                    btime = main.travelTimeMS(b.LegList.Leg)
+                    
+                    atime = atime + (achanges - bchanges) * 60000 * 30;
+                    aprice = aprice + (atime - btime)/3600000*240;
+                    
+                    if (aprice < bprice)
+                        return -1;
+                    if (aprice > bprice)
+                        return 1;
+                    return 0
+                }
               if(this.sortBy == "price"){
                 return this.timetables.slice().sort(comparePrice);
               } else if (this.sortBy == "time") {
@@ -729,6 +747,8 @@
                 return this.timetables.slice().sort(compareArrTime);
               } else if (this.sortBy == "changes") {
                 return this.timetables.slice().sort(comparePrice).sort(compareChanges);
+              } else if (this.sortBy == "best") {
+                return this.timetables.slice().sort(compareBest);
               } else {
                 return this.timetables;
               }
