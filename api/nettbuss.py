@@ -116,15 +116,16 @@ def search():
         )
     
     trips = []
-    for trip in json.loads(result.json())["VisibleJourneys"]:
+    jsondata = json.loads(result.json())
+    if "LaterJourneys" in jsondata and isinstance(jsondata["LaterJourneys"],(list,)):
+        jsondata["VisibleJourneys"].extend(jsondata["LaterJourneys"])
+    for trip in jsondata["VisibleJourneys"]:
         if isoToTimeStampNB(trip["PlannedDeparture"]) >= stringToUnixTS(search["temporal"]["earliestDepature"]) and isoToTimeStampNB(trip["PlannedArrival"]) <= stringToUnixTS(search["temporal"]["latestArrival"]):
             trips.append(trip)
-    
+
     products = []
     for trip in trips:
       pricelist = []
-      
-      
       url = "http://www.nettbuss.se/boka/#!/2/"+query["OriginBusStopId"]+"/"+query["DestinationBusStopId"]+"/"+query["DepartureDate"]+"/0/"+query["FareClassSelections"]+"/";
       for type in trip["Options"]:
         pris = float(type['Price'])
