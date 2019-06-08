@@ -25,18 +25,12 @@ def TimeStampToIso(tstamp):
   return datetime.datetime.fromtimestamp(tstamp).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def isoToFlexdate(string):
-  try:
-    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
-  except:
-    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
-  return utc_dt.strftime("%d.%m.%Y")
+  date = parser.parse(string).astimezone(tz.gettz('Europe/Stockholm'));
+  return date.strftime("%d.%m.%Y")
 
 def isoToDate(string):
-  try:
-    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%S.%fZ')
-  except:
-    utc_dt = datetime.datetime.strptime(string, '%Y-%m-%dT%H:%M:%SZ')
-  return utc_dt.strftime("%Y-%m-%d")
+  date = parser.parse(string).astimezone(tz.gettz('Europe/Stockholm'));
+  return date.strftime("%Y-%m-%d")
 
 def isoToTimeStamp(string):
   try:
@@ -134,9 +128,10 @@ def search():
     
     jsondata = result.content.split("$('#search-results-wrapper').searchResultFilters(")[1].split("});")[0]
     jsondata = jsondata.split("searchResults:")[1].split("\n")[0].strip()[:-1]
+    print jsondata
     trips = []
     for trip in json.loads(jsondata)["ridesData"]["direct"]["rides"][isoToDate(search["temporal"]["earliestDepature"])]:
-        if trip["departure"] >= stringToUnixTS(search["temporal"]["earliestDepature"]) and trip["arrival"] <= stringToUnixTS(search["temporal"]["latestArrival"]):
+        if stringToUnixTS(trip["departureDateTime"]+"+02:00") >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["arrivalDateTime"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"]):
             trips.append(trip)
     
     products = []
@@ -144,8 +139,9 @@ def search():
       pricelist = []
       url = "https://shop.flixbus.se/search?"+urlencode(params);
       for type in ["one"]:
-        pris = float(trip["price"])
-        pricelist.append({
+        if trip["price"]:
+          pris = float(trip["price"])
+          pricelist.append({
             "productId": url,
             "productTitle": "Lägsta pris",
             "productDescription": "Enkel biljett",
@@ -161,7 +157,7 @@ def search():
                 "date": trip["departureDateTime"]
             },
             "travellersPerCategory": search["travellersPerCategory"]
-        })
+          })
       products.append(pricelist)
     response.content_type = 'application/json'
     return json.dumps(products)
