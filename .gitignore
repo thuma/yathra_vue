@@ -1,0 +1,4 @@
+*.pyc
+.*
+static_data/stops
+settings.ini
