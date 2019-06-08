@@ -23,7 +23,7 @@ btstops = {
     "740000556":"6"   #Arlanda C
 }
 
-stops = sqlite3.connect('stops')
+stops = sqlite3.connect('../static_data/stops')
 
 def TimeStampToIso(tstamp):
   return datetime.datetime.fromtimestamp(tstamp).strftime("%Y-%m-%dT%H:%M:%SZ")

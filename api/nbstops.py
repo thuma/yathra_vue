@@ -324,7 +324,7 @@ Växjö,5685,Växjö Busstation,1530
 Øyer,5578,Øyer sentrum,1100""".split("\n")
 
 def find():
-  stopsdb = sqlite3.connect('stops')
+  stopsdb = sqlite3.connect('../static_data/stops')
   for id in stops:
     for row in stopsdb.execute("SELECT stop_name FROM stops WHERE stop_id = %s" % id):
       found = False

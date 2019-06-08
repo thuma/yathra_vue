@@ -17,7 +17,7 @@ travelCats = {
     "BAB":"YBarn (0-6 år"
 }
 
-db = sqlite3.connect("stops")
+db = sqlite3.connect("../static_data/stops")
 
 def TimeStampToIso(tstamp):
   return datetime.datetime.fromtimestamp(tstamp).strftime("%Y-%m-%dT%H:%M:%SZ")

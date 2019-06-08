@@ -16,7 +16,7 @@ travelCats = {
 config = ConfigParser()
 config.read('../../settings.ini')
 
-stops = sqlite3.connect('stops')
+stops = sqlite3.connect('../static_data/stops')
 
 def getLocationPos(id):
   for row in stops.execute("SELECT stop_lat,stop_lon,stop_name FROM stops WHERE stop_id = %s" % id):

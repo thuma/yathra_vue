@@ -12,7 +12,7 @@ travelCats = {
     "UN":"Ungdom (18-25 år)"
 }
 
-stops = sqlite3.connect('stops')
+stops = sqlite3.connect('../static_data/stops')
 
 def isoToTimeStamp(string):
   try:

@@ -275,7 +275,18 @@
             };
         xhr.send();
         }
-        
+
+        function getAjaxCSV(url, success) {
+            var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+            xhr.open('GET', url);
+            xhr.onload = function() {
+                if ( xhr.readyState>3 && xhr.status === 200) {
+                    success(CSVToArray(xhr.responseText,","));
+                }
+            };
+        xhr.send();
+        }
+
         function slider_to_time_conv(slider){
               var hours = Math.floor(slider / 60);
               var minutes = slider - hours * 60;
@@ -632,11 +643,23 @@
             var then = this;
             this.operators.forEach(function(operator){
                 getAjax("/price/" + operator + "/api/v1/productcat/travellers", function(data){
-                   then.traveltypes[operator] = data;
+                    then.traveltypes[operator] = data;
                 });
             });
             getAjax('https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId=740000001&destId=740000002&format=json', function(data){
-                   then.enddate = new Date(data.Trip[0].ServiceDays[0].planningPeriodEnd);
+                then.enddate = new Date(data.Trip[0].ServiceDays[0].planningPeriodEnd);
+            });
+            getAjaxCSV("static_data/exstops.txt", function (csv) {
+                stations = csv.filter(station => station[0]!=="");
+                then.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
+            });
+            getAjax("static_data/areas.json", function (areas) {
+                then.areas = areas;
+            });
+            getAjaxCSV("static_data/agency.txt", function (operators) {
+                var next = then;
+                operators = operators.filter(station => station[0]!=="");
+                operators.slice(1).forEach(function(data){next.$set(next.alloperators, data[0], {"name":data[1], "url":data[2]})});
             });
           },
           computed: {
@@ -889,64 +912,11 @@
         function to_station(station){
           return {"id":station[0],"name":station[1],"lat":station[2],"lon":station[3],"scbid":station[4]};
         }
-        
-        function get_stations(){
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', 'exstops.txt');
-          xhr.onreadystatechange = function () {
-            var DONE = 4; // readyState 4 means the request is done.
-            var OK = 200; // status 200 is a successful return.
-            if (xhr.readyState === DONE) {
-              if (xhr.status === OK)
-                stations = CSVToArray(xhr.responseText, ",").filter(station => station[0]!=="");
-                yathra.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
-              } else {
-                 // An error occurred during the request.
-              }
-            }
-          xhr.send(null);
-        }
-        get_stations();
-        
+
         function to_operator(row){
           return {"id":row[0],"name":row[1],"url":row[2]};
         }
-        
-        function get_operators(){
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', 'agency.txt');
-          xhr.onreadystatechange = function () {
-            var DONE = 4; // readyState 4 means the request is done.
-            var OK = 200; // status 200 is a successful return.
-            if (xhr.readyState === DONE) {
-              if (xhr.status === OK)
-                operators = CSVToArray(xhr.responseText, ",").filter(row => row[0]!=="");
-                operators.slice(1).forEach(function(data){yathra.$set(yathra.alloperators, data[0], {"name":data[1], "url":data[2]})});
-              } else {
-                 // An error occurred during the request.
-              }
-            }
-          xhr.send(null);
-        }
-        get_operators();
-        
-        function get_areas(){
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', 'areas.json');
-          xhr.onreadystatechange = function () {
-            var DONE = 4; // readyState 4 means the request is done.
-            var OK = 200; // status 200 is a successful return.
-            if (xhr.readyState === DONE) {
-              if (xhr.status === OK)
-                yathra.areas = JSON.parse(xhr.responseText);
-              } else {
-                 // An error occurred during the request.
-              }
-            }
-          xhr.send(null);
-        }
-        get_areas();
-        
+
         function compareStations(a, b) {
           var nameA = a.id.toUpperCase();
           var nameB = b.id.toUpperCase();

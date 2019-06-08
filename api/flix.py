@@ -13,7 +13,7 @@ travelCats = {
     "bike_slot":"Cyklar"
 }
 
-db = sqlite3.connect("stops")
+db = sqlite3.connect("../static_data/stops")
 
 localstops = []
 for stop in stops:
