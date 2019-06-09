@@ -119,14 +119,14 @@ def search():
   
     print result.content
     products = []
-    for trip in result.json():
-        pricelist = []
+    pricelist = []
+    for ticket in result.json():
         url = "https://www.vasttrafik.se/biljetter/enkelbiljetter/"
-        pris = float(trip['price'])
+        pris = float(ticket['price'])
         vat = pris*0.06
-        pricelist.append({
+        pricedata ={
             "productId": url,
-            "productTitle": trip["name"],
+            "productTitle": ticket["name"],
             "productDescription": "Köps av västtrafik",
             "fares": [
                 {
@@ -140,11 +140,13 @@ def search():
                 "date": search["temporal"]["earliestDepature"]
             },
             "travellersPerCategory": search["travellersPerCategory"]
-        })
-        if search["travellersPerCategory"][0]["cat"] == "VU" and "Vuxen" in trip["name"]:
-            products.append(pricelist)
-        elif search["travellersPerCategory"][0]["cat"] == "UN" and "Ungdom" in trip["name"]:
-            products.append(pricelist)
+        }
+        if search["travellersPerCategory"][0]["cat"] == "VU" and "Vuxen" in ticket["name"]:
+            pricelist.append(pricedata)
+        elif search["travellersPerCategory"][0]["cat"] == "UN" and "Ungdom" in ticket["name"]:
+            pricelist.append(pricedata)
+    pricelist.sort(key=lambda x: x["fares"][0]["amount"])
+    products.append(pricelist)
     response.content_type = 'application/json'
     return json.dumps(products)
 

@@ -42,28 +42,36 @@ def stringToUnixTS(string):
   utc_dt = parser.parse(string).astimezone(tz.tzutc());
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
+manualcorrections = {
+  "740000004":"7064204",
+  "740011607":"6001070",
+  "740000140":"6002001",
+  "740000052":"6003001",
+  "740000080":"13003498",
+  "740000313":"13003182",
+  "740043449":"13003400"
+}
+
 def StopIdToData(id):
   stopprefixes = {
     "261":13000000,
-    "255":7000000,
-    "256":8000000,
+    "255": 7000000,
+    "256": 8000000,
     "276":12000000,
     "258":10000000,
-    "254":6000000,
+    "254": 6000000,
   }
-  for row in stops.execute("SELECT stop_lat,stop_lon,stop_name FROM stops WHERE stop_id = %s" % id):
+  for row in stops.execute("SELECT stop_lat,stop_lon,stop_name,stop_scbid FROM stops WHERE stop_id = %s" % id):
     lat = row[0]
     lon = row[1]
     name = row[2]
-    print name
-  for row in stops.execute("SELECT agency_stop_id, agency_id FROM astops WHERE (agency_id = 254 OR agency_id = 255 OR agency_id = 256 OR agency_id = 258 OR agency_id = 261 OR agency_id = 276) AND stop_id = %s" % id):
-    nid = int(row[0])+stopprefixes[str(row[1])]
-  if id == "740000080":
-    nid = int(3498)+stopprefixes[str(row[1])]
-  if id == "740000004":
-    nid = "7064204"
-  if id == "740011607":
-    nid = "6001070"
+    scbid = int(str(row[3])[:-2]+"000000")
+    print name + " " + str(scbid)
+  if id in manualcorrections:
+    nid = manualcorrections[id]
+  else:
+    for row in stops.execute("SELECT agency_stop_id, agency_id FROM astops WHERE (agency_id = 254 OR agency_id = 255 OR agency_id = 256 OR agency_id = 258 OR agency_id = 261 OR agency_id = 276) AND stop_id = %s" % id):
+      nid = str(int(row[0])+scbid)
   return {"name":name, "id":nid, "X":lat, "Y":lon}
 
 #254 = JLT
