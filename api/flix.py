@@ -45,9 +45,9 @@ def stringToUnixTS(string):
 
 def distanse(locationa,locationb):
   return math.sqrt(
-  	abs(locationa['lon']-locationb['lon']) + 
-  	abs(locationa['lat']-locationb['lat'])
-  	)
+       abs(locationa['lon']-locationb['lon']) + 
+       abs(locationa['lat']-locationb['lat'])
+       )
 
 def StopIdToName(id):
   current = {"dist":9999999}
@@ -68,8 +68,8 @@ def StopIdToName(id):
 
   for row in db.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
     position = {
-    	"lat":float(row[0]),
-    	"lon":float(row[1])
+        "lat":float(row[0]),
+        "lon":float(row[1])
     }
     for stop in localstops:
       stop["dist"] = distanse(position,stop)

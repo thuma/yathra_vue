@@ -30,7 +30,7 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 279,Västtrafik,http://www.vasttrafik.se/,Europe/Stockholm,sv
 286,Ventrafiken,http://www.ventrafiken.se/,Europe/Stockholm,sv
 287,Arlanda Express,http://www.arlandaexpress.com,Europe/Stockholm,sv
-289,Länstrafiken Örebro,http://www.lanstrafiken.se/orebro,Europe/Stockholm,sv
+289,Länstrafiken Örebro,http://www.lanstrafiken.se/,Europe/Stockholm,sv
 300,Öresundståg,http://www.oresundstag.se/,Europe/Stockholm,sv
 310,BT Buss,http://www.bergslagstaget.se/,Europe/Stockholm,sv
 315,Tågkompaniet,http://www.resrobot.se/,Europe/Stockholm,sv
@@ -70,7 +70,7 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 632,Roslagens Sjötrafik,http://www.roslagenssjotrafik.se/,Europe/Stockholm,sv
 635,Piteå Lokaltrafik,http://www.citybuss.se/,Europe/Stockholm,sv
 636,Strömma,http://www.stromma.se/goteborg/,Europe/Stockholm,sv
-637,Boden Stadstrafik,http://www.boden.se/bodens-kommun/tekniskforvaltning_lokaltrafikeniboden,Europe/Stockholm,sv
+637,Boden Stadstrafik,http://www.boden.se/kommunen/samhalle-och-infrastruktur/lokaltrafik/,Europe/Stockholm,sv
 640,Bråvikslinjen,http://toandfrom.se/,Europe/Stockholm,sv
 642,Skaraborgaren,http://www.skovdebuss.se/,Europe/Stockholm,sv
 644,Blåklintsbuss,http://www.blaklintsbuss.se/,Europe/Stockholm,sv
@@ -80,7 +80,7 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 653,Kustpilen,https://klt.se/,Europe/Stockholm,sv
 805,Green City Ferries,http://www.greencityferries.com/,Europe/Stockholm,sv
 807,IKEA,https://www.ikea.com/ext/local-store/se/sv/stockholm-kungens-kurva/om-varuhuset/%20KOLLEKTIVTRAFIK/,Europe/Stockholm,sv
-808,Skärgårdsbåtarna i Uddevalla,http://savormedia.se/?lang=sv,Europe/Stockholm,sv
+808,Skärgårdsbåtarna i Uddevalla,http://www.skargardsbatarna.com/,Europe/Stockholm,sv
 812,MTR Express,https://mtrexpress.travel/,Europe/Stockholm,sv
 819,BybergNordin,http://www.bybergnordin.se/,Europe/Stockholm,sv
 821,Söne Buss,http://sonebuss.se/,Europe/Stockholm,sv
