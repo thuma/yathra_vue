@@ -1,7 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime, urllib, rt90
+import requests, json, sqlite3, datetime, urllib, rt90, math
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
 
@@ -42,36 +42,52 @@ def stringToUnixTS(string):
   utc_dt = parser.parse(string).astimezone(tz.tzutc());
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
-manualcorrections = {
-  "740000004":"7064204",
-  "740011607":"6001070",
-  "740000140":"6002001",
-  "740000052":"6003001",
-  "740000080":"13003498",
-  "740000313":"13003182",
-  "740043449":"13003400"
-}
+def distance(orgin,dest): 
+    # approximate radius of earth in km
+    R = 6373000
+
+    lat1 = math.radians(orgin["lat"])
+    lon1 = math.radians(orgin["lon"])
+    lat2 = math.radians(dest["lat"])
+    lon2 = math.radians(dest["lon"])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = R * c
+    return distance
 
 def StopIdToData(id):
-  stopprefixes = {
-    "261":13000000,
-    "255": 7000000,
-    "256": 8000000,
-    "276":12000000,
-    "258":10000000,
-    "254": 6000000,
-  }
   for row in stops.execute("SELECT stop_lat,stop_lon,stop_name,stop_scbid FROM stops WHERE stop_id = %s" % id):
     lat = row[0]
     lon = row[1]
     name = row[2]
-    scbid = int(str(row[3])[:-2]+"000000")
-    print name + " " + str(scbid)
-  if id in manualcorrections:
-    nid = manualcorrections[id]
-  else:
-    for row in stops.execute("SELECT agency_stop_id, agency_id FROM astops WHERE (agency_id = 254 OR agency_id = 255 OR agency_id = 256 OR agency_id = 258 OR agency_id = 261 OR agency_id = 276) AND stop_id = %s" % id):
-      nid = str(int(row[0])+scbid)
+
+  params = {
+  "query":name.lower(),
+  "withinkalmar":"false"
+  }
+  
+  headers = {
+  "Accept":"application/json, text/javascript, */*; q=0.01",
+  "X-Requested-With": "XMLHttpRequest"
+  }
+  gotstops = requests.get("https://www.kalmarlanstrafik.se/api/TravelPlannerApi/StartPoints",params=params, headers=headers)
+  params = {
+  "query":name.lower().split(" ")[0],
+  "withinkalmar":"false"
+  }
+  gotstopsb = requests.get("https://www.kalmarlanstrafik.se/api/TravelPlannerApi/StartPoints",params=params, headers=headers)
+  gottoalstops = gotstopsb.json() + gotstops.json()
+  closest = 500
+  for one in gottoalstops:
+    if one["Coordinate"]["X"] and one["PointTypeId"] == 0: 
+        dist = distance({"lat":lat,"lon":lon},{"lat":float(one["Coordinate"]["X"]),"lon":float(one["Coordinate"]["Y"])})
+        if dist < closest:
+          closest = dist
+          nid = str(one['Id'])
   return {"name":name, "id":nid, "X":lat, "Y":lon}
 
 #254 = JLT
@@ -175,10 +191,10 @@ def search():
         data=data,
         headers=headers
         )
-        
+
     trips = []
     for trip in result.json():
-        if stringToUnixTS(trip["DepDateTime"]+"+02:00") >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["ArrDateTime"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"]):
+        if stringToUnixTS(trip["DepDateTime"]+"+02:00")+600 >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["ArrDateTime"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"])+600:
             trips.append(trip)
    
     products = []
@@ -193,6 +209,7 @@ def search():
         "BA":1,
         "DU":2
         }
+
     for trip in trips:
         pdata = trip['Prices'][0]["PriceItems"][findindex[search["travellersPerCategory"][0]["cat"]]]["PriceTravel"]
         pricelist = []
