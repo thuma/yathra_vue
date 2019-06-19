@@ -1,7 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime, urllib, rt90
+import requests, json, sqlite3, datetime, urllib, rt90, math
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
 
@@ -40,7 +40,7 @@ def stringToUnixTS(string):
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
 def StopIdToName(id):
-  for row in stops.execute("SELECT stop_lat,stop_lon FROM stops WHERE stop_id = %s" % id):
+  for row in stops.execute("SELECT stop_lat,stop_lon,stop_name FROM stops WHERE stop_id = %s" % id):
     coords = rt90.geodetic_to_grid(row[0],row[1])
     params = {
             "x":str(coords[0]).split(".")[0],
@@ -51,8 +51,23 @@ def StopIdToName(id):
         "http://www.labs.skanetrafiken.se/v2.2/neareststation.asp",
         params = params
         )
-    return find.content.split("NearestStopArea><Id>")[1].split("</Id>")[0]
-    
+
+    params = {"inpPointfr":row[2]}
+    findbn = requests.get(
+        "http://www.labs.skanetrafiken.se/v2.2/querystation.asp",
+        params = params
+        )
+    points = GetFirstValue(findbn.content,"StartPoints")
+    point = GetFirstValue(points,"Point")
+    nid = GetFirstValue(point,"Id")
+    X = int(GetFirstValue(point,"X"))
+    Y = int(GetFirstValue(point,"Y"))
+    dist =  math.sqrt(abs(X - coords[0])**2+abs(Y - coords[1])**2)
+    if dist > 250:
+      return find.content.split("NearestStopArea><Id>")[1].split("</Id>")[0]
+    else:
+      return nid
+
 @post('/api/v1/buy')
 def cats():
     response.content_type = 'application/json'
