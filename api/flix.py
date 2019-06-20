@@ -52,11 +52,11 @@ def distanse(locationa,locationb):
 def StopIdToName(id):
   current = {"dist":9999999}
   if id == "740020671":
-    return {"id":"24531"} #T2/3
+    return {"id":"24531"} #Arlanda T2/3
   elif id == "740033206":
-    return {"id":"24521"} #T4
+    return {"id":"24521"} #Arlanda T4
   elif id == "740043310":
-    return {"id":"16908"} #T5
+    return {"id":"16908"} #Arlanda T5
   elif id == "800022985":
     return {"id":"88"} #Berlin TXL
   elif id == "800034479":
@@ -125,10 +125,9 @@ def search():
         "https://shop.flixbus.se/search",
         params=params
         )
-    
+
     jsondata = result.content.split("$('#search-results-wrapper').searchResultFilters(")[1].split("});")[0]
     jsondata = jsondata.split("searchResults:")[1].split("\n")[0].strip()[:-1]
-    print jsondata
     trips = []
     for trip in json.loads(jsondata)["ridesData"]["direct"]["rides"][isoToDate(search["temporal"]["earliestDepature"])]:
         if stringToUnixTS(trip["departureDateTime"]+"+02:00") >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["arrivalDateTime"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"]):
