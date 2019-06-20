@@ -1,14 +1,14 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests, json, sqlite3, datetime, urllib, rt90, math
+import requests, json, sqlite3, datetime, urllib, rt90, math, re
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
 
 travelCats = {
     "VU":"Vuxen",
-    "UN1":"Ungdom (7-19 år)",
-    "UN2":"Ungdom (20-25 är)"
+    "UN1":"Ungdom/7-19",
+    "UN2":"Ungdom/20-25"
 }
 
 stops = sqlite3.connect('../static_data/stops')
@@ -40,33 +40,8 @@ def stringToUnixTS(string):
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
 def StopIdToName(id):
-  for row in stops.execute("SELECT stop_lat,stop_lon,stop_name FROM stops WHERE stop_id = %s" % id):
-    coords = rt90.geodetic_to_grid(row[0],row[1])
-    params = {
-            "x":str(coords[0]).split(".")[0],
-            "y":str(coords[1]).split(".")[0],
-            "Radius":"500"
-            }
-    find = requests.get(
-        "http://www.labs.skanetrafiken.se/v2.2/neareststation.asp",
-        params = params
-        )
-
-    params = {"inpPointfr":row[2]}
-    findbn = requests.get(
-        "http://www.labs.skanetrafiken.se/v2.2/querystation.asp",
-        params = params
-        )
-    points = GetFirstValue(findbn.content,"StartPoints")
-    point = GetFirstValue(points,"Point")
-    nid = GetFirstValue(point,"Id")
-    X = int(GetFirstValue(point,"X"))
-    Y = int(GetFirstValue(point,"Y"))
-    dist =  math.sqrt(abs(X - coords[0])**2+abs(Y - coords[1])**2)
-    if dist > 250:
-      return find.content.split("NearestStopArea><Id>")[1].split("</Id>")[0]
-    else:
-      return nid
+  for row in stops.execute("SELECT agency_stop_id FROM astops WHERE stop_id = %s and agency_id = 267" % id):
+    return str(row[0])
 
 @post('/api/v1/buy')
 def cats():
@@ -101,14 +76,14 @@ def search():
     #}
     
     data = {
-        "inpPointFr_ajax":"Mora resecentrum (Mora)|562152|0",
-        "inpPointTo_ajax":"Orsa busstn (Orsa)|534063|0",
+        "inpPointFr_ajax":"A|"+StopIdToName(search["route"][0]["stopId"])+"|0",
+        "inpPointTo_ajax":"B|"+StopIdToName(search["route"][-1]["stopId"])+"|0",
         "inpPointInterm_ajax":"",
-        "inpPointFr":"Mora resecentrum (Mora)",
-        "inpPointTo":"Orsa busstn (Orsa)",
+        #"inpPointFr":"Mora resecentrum (Mora)",
+        #"inpPointTo":"Orsa busstn (Orsa)",
         "selDirection":"0",
-        "inpTime":"07:46",
-        "inpDate":"2019-06-19",
+        "inpTime":utcIsoToLocalSktrTime(search["temporal"]["earliestDepature"]),
+        "inpDate":utcIsoToLocalSktrDate(search["temporal"]["earliestDepature"]),
         "x":"11",
         "y":"7",
         "selPriceType":"0",
@@ -126,55 +101,73 @@ def search():
         "selPriority":"0",
         "selWalkSpeed":"0",
         "optReturn":"0",
-        "selPointFr":"Mora resecentrum (Mora)|562152|0",
-        "selPointTo":"Orsa busstn (Orsa)|534063|0",
-        "selPointFrKey":"562152",
-        "selPointToKey":"534063",
+        #"selPointFr":"Mora resecentrum (Mora)|562152|0",
+        #"selPointTo":"Orsa busstn (Orsa)|534063|0",
+        #"selPointFrKey":"562152",
+        #"selPointToKey":"534063",
         "selPointInterm":"",
         "selPointIntermKey":"",
         "TrafficMask":"",
         "RSH":"",
-        "FirstStart":"2019-06-19 07:45:00",
-        "LastStart":"2019-06-19 09:45:00",
+        #"FirstStart":"2019-06-19 07:45:00",
+        #"LastStart":"2019-06-19 09:45:00",
         "FirstStart2":"",
         "LastStart2":"",
         "CacheFile":"1145284971809147253",
         "CacheFile2":"",
         "CacheFileSingleStation":"",
-        "inpDate2":"2019-06-19",
-        "inpTime2":"11:48",
+        #"inpDate2":"2019-06-19",
+        #"inpTime2":"11:48",
         "selDirection2":"0",
         "selSingleStation":"",
         "selSingleStationKey":"",
         "selComboJourney":"0",
         "chkWalkToOtherStop":"0",
-        "inpDateSingleStation":"2019-06-19",
-        "inpTimeSingleStation":"07:48",
+        #"inpDateSingleStation":"2019-06-19",
+        #"inpTimeSingleStation":"07:48",
         "selDirectionSingleStation":"0",
         "Source":"resultspage",
         "HtmlSource":"",
         "inpSender":""
     }
-
+    print data["inpPointFr_ajax"]
+    print data["inpPointTo_ajax"]
     result = requests.get(
-        "https://reseplanerare.fskab.se/dalarna/v2/resultspage.asp",
+        "https://reseplanerare.fskab.se/dalarna/v2/querypage_adv.aspx",
         data = data
         )
     trips = [1]
    
     products = []
 
+    names = ["Vuxen kontant",
+    "Ungdom/20-25 kontant",
+    "Ungdom/7-19 kontant",
+    "Vuxen Period-30",
+    "Ungdom/20-25 Period-30",
+    "Ungdom/7-19 Period-30",
+    "Vuxen Reskassa",
+    "Ungdom/20-25 Reskassa",
+    "Ungdom/7-19 Reskassa",
+    "",
+    "",
+    "",
+    "Vuxen Mobilbiljett",
+    "Ungdom/20-25 Mobilbiljett",
+    "Ungdom/7-19 Mobilbiljett"]
+
     for trip in trips:
         pricelist = []
-        prices = result.content.split("priceArr[0]")[1].split("(")[1].split(")")[0].split(",")
-        for i, price in prices:
-            pris = float(price)
+        prices = eval("["+result.content.split("priceArr[")[1].split("(")[1].split(")")[0]+"]")
+        for i, price in enumerate(prices):
+          if travelCats[search["travellersPerCategory"][0]["cat"]] in names[i]:
+            print price
+            pris = float(re.sub('[^0-9\,]','', price).replace(",","."))
             vat = round(pris*0.06,2)
             url = "https://www.dalatrafik.se/sv/biljetter/"
             pricelist.append({
                 "productId": url,
-                "productTitle": "Enkelbiljett",
-                "productDescription": find[search["travellersPerCategory"][0]["cat"]],
+                "productTitle": names[i],
                 "fares": [
                     {
                         "amount": pris,
@@ -184,12 +177,13 @@ def search():
                     }
                 ],
                 "productProperties": {
-                    "date": "--::"
+                    "date": search["temporal"]["earliestDepature"]
                 },
                 "travellersPerCategory": search["travellersPerCategory"]
             })
+        pricelist.sort(key=lambda x: x["fares"][0]["amount"], reverse=False)
         products.append(pricelist)
     response.content_type = 'application/json'
     return json.dumps(products)
 
-run(host='127.0.0.1', port=8095, reloader=True)
+run(host='127.0.0.1', port=8096, reloader=True)
