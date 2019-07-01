@@ -226,11 +226,11 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="text-center">Priser och tidtabeller för</h5>
-                            <a v-bind:href="operatorUrlById(opid)" v-for="opid in operators" target="_blank">
+                            <a v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
                             <img style="height: 20px; margin:7px;"  v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
                             </a>
                             <h5 class="text-center">Endast tidtabeller för</h5>
-                            <a v-bind:href="operatordata['url']" v-for="(operatordata, opid in alloperatorsOtt" target="_blank">
+                            <a v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
                             <img style="height: 20px; margin:7px;"  v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
                             </a>
                         </div>
@@ -396,7 +396,7 @@
             "328","327","310","358","626","391",
             "256","653","513","357","275","253",
             "254","255","258","261","648","586",
-            "380","267"],
+            "380","267","252"],
             traveltypes: {}
           },
           methods: {
@@ -524,7 +524,7 @@
             getPrice: function(trip){
               var next = this;
               trip.LegList.Leg.forEach(function(leg){
-                if(leg.type !== "WALK" && leg.type !== "TRSF" && next.operators.indexOf(leg.Product.operatorCode) >= 0){
+                if(leg.type !== "WALK" && leg.type !== "TRSF" && next.traveltypes.hasOwnProperty(leg.Product.operatorCode)){
                   var search = {
                     "route": [
                         { "stopId": leg.Origin.id },
@@ -705,12 +705,13 @@
           computed: {
             alloperatorsOtt: function(){
               var notall = {}; 
-              var next = this;
-              Object.keys(this.alloperators).forEach(function(op){
-                if (next.operators.indexOf(op) == -1){
-                  notall[op] = next.alloperators[op];
+              var all = this.alloperators;
+              var alltypes = this.traveltypes;
+              Object.keys(all).forEach(function(op){
+                if (!alltypes.hasOwnProperty(op)){
+                  notall[op] = all[op];
                 }
-              })
+              });
               return notall
             },
             readyToFind: function(){
