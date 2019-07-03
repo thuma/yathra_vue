@@ -121,7 +121,10 @@
                     </div>
                 </div>
                 <div class="col-lg-1 col-md-6 p-1">
-                    <button type="button" v-on:click="find_in_timetable('new')" class="btn btn-block" v-bind:class="[{'btn-primary':readyToFind},{'btn-warning':!readyToFind}]">Sök</button>
+                    <button v-if="loading==4" type="button" v-on:click="find_in_timetable('new')" class="btn btn-block btn-primary" :disabled="!readyToFind">Sök</button>
+                    <div v-else="" class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Söker...</span>
+                    </div>
                 </div>
             </div>
             <hr>
@@ -361,6 +364,7 @@
             months:["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"],
             sortList: "",
             from:"",
+            loading:4,
             from_station: {"id":"","name":"","scbid":""},
             to:"",
             to_station: {"id":"","name":"","scbid":""},
@@ -587,6 +591,11 @@
               this.from_station = to_station;
             },
             find_in_timetable: function(state){
+              if(this.loading !== 4){
+                return;
+              } else {
+                loading = 999;
+              }
               var context = "";
               if (state == "before"){
                 context = "&context="+this.scrB ;
@@ -594,9 +603,9 @@
                 context = "&context="+this.scrF ;
               }
               var xhr = new XMLHttpRequest();
-              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.time+'&date='+this.date+'&format=json'+context);
               var next = this
               xhr.onreadystatechange = function () {
+                next.loading = xhr.readyState;
                 var DONE = 4; // readyState 4 means the request is done.
                 var OK = 200; // status 200 is a successful return.
                 if (xhr.readyState === DONE) {
@@ -623,6 +632,7 @@
                   }
                 }
               }
+              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.time+'&date='+this.date+'&format=json'+context);
               xhr.send(null);
             },
             save_search: function (){
