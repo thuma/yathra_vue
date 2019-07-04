@@ -34,7 +34,12 @@
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text">Från</span>
+                            <button class="btn btn-secondary dropdown-toggle" v-on:click="frompickershow=!frompickershow">
+                              Från
+                            </button>
+                            <div class="dropdown-menu p-0" v-bind:class="{ show: frompickershow }">
+                                <button class="dropdown-item" type="button" v-on:click='from = ""; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Ta bort</button>
+                            </div>
                             <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
                                 <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
                             </div>
@@ -50,7 +55,12 @@
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text">Till</span>
+                            <button class="btn btn-secondary dropdown-toggle" v-on:click="topickershow=!topickershow">
+                              Till
+                            </button>
+                            <div class="dropdown-menu p-0" v-bind:class="{ show: topickershow }">
+                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Ta bort</button>
+                            </div>
                             <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
                                 <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
                             </div>
@@ -64,7 +74,7 @@
                             <button class="btn btn-secondary dropdown-toggle" v-on:click="datepickershow=!datepickershow">
                               Dag
                             </button>
-                            <div class="dropdown-menu p-0" v-bind:class="{ show: datepickershow }" aria-labelledby="dropdownMenuButton">
+                            <div class="dropdown-menu p-0" v-bind:class="{ show: datepickershow }">
                                 <table class="table table-sm">
                                     <thead class="thead-light text-right" >
                                       <tr>
@@ -122,8 +132,10 @@
                 </div>
                 <div class="col-lg-1 col-md-6 p-1">
                     <button v-if="loading==4" type="button" v-on:click="find_in_timetable('new')" class="btn btn-block btn-primary" :disabled="!readyToFind">Sök</button>
-                    <div v-else="" class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Söker...</span>
+                    <div v-else="" class="mx-auto" style="width: 2rem">
+                    <div class="spinner-border text-primary">
+                        <span class="sr-only"></span>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -144,6 +156,13 @@
                         <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
                             <div class="mx-auto" style="width: fit-content;">
                                 Sök resor före {{ timetablesFirstTime }}
+                            </div>
+                        </li>
+                        <li v-if="loading !== 4" class="list-group-item d-none d-sm-block">
+                            <div class="mx-auto" style="width: 2rem">
+                                <div class="spinner-border text-primary">
+                                    <span class="sr-only"></span>
+                                </div>
                             </div>
                         </li>
                         <li class="list-group-item d-none d-sm-block">
@@ -361,6 +380,8 @@
               "7":"Buss",
               "8":"Färja"
             },
+            frompickershow: false,
+            topickershow: false,
             months:["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"],
             sortList: "",
             from:"",
@@ -601,6 +622,8 @@
                 context = "&context="+this.scrB ;
               } else if (state == "after"){
                 context = "&context="+this.scrF ;
+              } else if (sate = "new"){
+                this.timetables = [];
               }
               var xhr = new XMLHttpRequest();
               var next = this
