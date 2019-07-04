@@ -722,7 +722,7 @@
             var then = this;
             this.operators.forEach(function(operator){
                 getAjax("/price/" + operator + "/api/v1/productcat/travellers", function(data){
-                    then.traveltypes[operator] = data;
+                    then.$set(then.traveltypes, operator, data);
                 });
             });
             getAjax('https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId=740000001&destId=740000002&format=json', function(data){
