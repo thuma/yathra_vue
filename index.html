@@ -153,12 +153,12 @@
                 </div>
                 <div class="col-lg-12 p-1" v-if="timetables.length > 0">
                     <ul class="list-group">
-                        <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
+                        <li v-if="loading == 4" class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('before')">
                             <div class="mx-auto" style="width: fit-content;">
                                 Sök resor före {{ timetablesFirstTime }}
                             </div>
                         </li>
-                        <li v-if="loading !== 4" class="list-group-item d-none d-sm-block">
+                        <li v-else="" class="list-group-item d-none d-sm-block">
                             <div class="mx-auto" style="width: 2rem">
                                 <div class="spinner-border text-primary">
                                     <span class="sr-only"></span>
@@ -211,7 +211,7 @@
                                     {{ totallowestprice(trip) }} kr
                                     </span>
                                 </div>
-                                <div class="col-lg-1 col-sm-2 p-0">
+                                <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     <button v-on:click="detailsToggle(trip)" class="btn btn-secondary btn-sm">⇄ {{ changes(trip.LegList.Leg) }} </button>
                                 </div>
                                 <div class="col-lg-6 p-0 d-none d-lg-block">
@@ -236,9 +236,16 @@
                                 </div>
                             </div>
                         </li>
-                        <li class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
+                        <li v-if="loading == 4" class="list-group-item btn btn-secondary" v-on:click="find_in_timetable('after')">
                             <div class="mx-auto" style="width: fit-content;" >
                                 Sök resor efter {{ timetablesLastTime }}
+                            </div>
+                        </li>
+                        <li v-else="" class="list-group-item d-none d-sm-block">
+                            <div class="mx-auto" style="width: 2rem">
+                                <div class="spinner-border text-primary">
+                                    <span class="sr-only"></span>
+                                </div>
                             </div>
                         </li>
                     </ul>
@@ -628,7 +635,6 @@
               var xhr = new XMLHttpRequest();
               var next = this
               xhr.onreadystatechange = function () {
-                next.loading = xhr.readyState;
                 var DONE = 4; // readyState 4 means the request is done.
                 var OK = 200; // status 200 is a successful return.
                 if (xhr.readyState === DONE) {
@@ -647,13 +653,13 @@
                         next.scrF = JSON.parse(xhr.responseText).scrF
                     } else if (state == "after"){
                         next.timetables = next.timetables.concat(ttable);
-                        next.scrB = JSON.parse(xhr.responseText).scrB
                         next.scrF = JSON.parse(xhr.responseText).scrF
                     }
                   } else {
                      // An error occurred during the request.
                   }
                 }
+                next.loading = xhr.readyState;
               }
               xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.time+'&date='+this.date+'&format=json'+context);
               xhr.send(null);
