@@ -90,7 +90,7 @@ def search():
         "selPriceType":"0",
         "cmdAction":"search",
         "EU_Spirit":"False",
-        "TNSource":"VL",
+        "TNSource":"XTRAFIKEN",
         "SupportsScript":"True",
         "Language":"se",
         "VerNo":"",
