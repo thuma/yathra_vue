@@ -36,6 +36,8 @@ stopids = {
     "740000032":"Bräcke",
     "740000660":"Bålsta",
     "860000858":"Copenhagen Airport",
+    "740000660":"Bålsta",
+    "740000622":"Stockholm C",
     "740000129":"Degerfors",
     "740000065":"Dingle station",
     "740001333":"Dingtuna",
