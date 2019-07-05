@@ -169,7 +169,7 @@ def search():
             print price
             pris = float(re.sub('[^0-9\,]','', price).replace(",","."))
             vat = round(pris*0.06,2)
-            url = "https://www.varmlandstrafik.se/biljetter/"
+            url = "https://www.vl.se/biljetter/kopa-biljett/"
             pricelist.append({
                 "productId": url,
                 "productTitle": names[i],
