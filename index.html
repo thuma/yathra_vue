@@ -7,7 +7,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-        <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
         <style>
             .btn-secondary { 
             color: #000;
@@ -71,7 +70,7 @@
                 <div class="col-lg-4 col-md-6 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn btn-secondary dropdown-toggle" v-on:click="datepickershow=!datepickershow">
+                            <button class="btn dropdown-toggle" v-bind:class="[datepickershow ? 'btn-primary' : 'btn-secondary']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
                               Dag
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: datepickershow }">
@@ -102,7 +101,7 @@
                         </div>
                         <input type="text" class="form-control" disabled v-model="dateshow" placeholder="2018-01-20 16:00">
                         <div class="input-group-append">
-                            <button class="btn btn-secondary dropdown-toggle" v-on:click="timepickershow=!timepickershow">
+                            <button class="btn dropdown-toggle"  v-bind:class="[timepickershow ? 'btn-primary' : 'btn-secondary']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
                               Tid
                             </button>
                             <div class="dropdown-menu dropdown-menu-right p-0" v-bind:class="{ show: timepickershow }">
@@ -131,7 +130,7 @@
                     </div>
                 </div>
                 <div class="col-lg-1 col-md-6 p-1">
-                    <button v-if="loading==4" type="button" v-on:click="find_in_timetable('new')" class="btn btn-block btn-primary" :disabled="!readyToFind">Sök</button>
+                    <button v-if="loading==4" type="button" v-on:click="timepickershow=false;datepickershow=false;find_in_timetable('new')" class="btn btn-block btn-primary" :disabled="!readyToFind">Sök</button>
                     <div v-else="" class="mx-auto" style="width: 2rem">
                     <div class="spinner-border text-primary">
                         <span class="sr-only"></span>
@@ -429,7 +428,7 @@
             "256","653","513","357","275","253",
             "254","255","258","261","648","586",
             "380","267","252","289","265","317",
-            "266","268","269","271"],
+            "266","268","269","271","273"],
             traveltypes: {}
           },
           methods: {
