@@ -42,8 +42,31 @@ def stringToUnixTS(string):
   return (utc_dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds()
 
 def StopIdToName(id):
-  for row in stops.execute("SELECT agency_stop_id FROM astops WHERE stop_id = %s and agency_id = 268" % id):
-    return str(row[0])
+  for gtfsdata in stops.execute("SELECT stop_lon, stop_lat FROM stops WHERE stop_id = %s" % id):
+    dist = 99999.0;
+    for row in stops.execute("SELECT stop_lon, stop_lat, agency_stop_id, agency_stop_name FROM akstops WHERE stop_lon BETWEEN %s AND %s AND stop_lat BETWEEN %s AND %s AND agency_id = 268" % (gtfsdata[0]-0.5,gtfsdata[0]+0.5,gtfsdata[1]-0.5,gtfsdata[1]+0.5)):
+        meters = distance({"lat":row[1],"lon":row[0]},{"lat":gtfsdata[1],"lon":gtfsdata[0]})
+        if meters < dist:
+            dist = meters
+            best = row
+    return str(row[3].encode("utf8")+"|"+str(best[2])+"|0")
+
+def distance(orgin,dest): 
+    # approximate radius of earth in km
+    R = 6373000
+
+    lat1 = math.radians(orgin["lat"])
+    lon1 = math.radians(orgin["lon"])
+    lat2 = math.radians(dest["lat"])
+    lon2 = math.radians(dest["lon"])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = R * c
+    return distance
 
 @post('/api/v1/buy')
 def cats():
@@ -77,8 +100,8 @@ def search():
     #    }
     #}
     data = {
-        "inpPointFr_ajax":"A|"+StopIdToName(search["route"][0]["stopId"])+"|0",
-        "inpPointTo_ajax":"B|"+StopIdToName(search["route"][-1]["stopId"])+"|0",
+        "inpPointFr_ajax":StopIdToName(search["route"][0]["stopId"]),
+        "inpPointTo_ajax":StopIdToName(search["route"][-1]["stopId"]),
         "inpPointInterm_ajax":"inpPointInterm_ajax",
         #"inpPointFr":"Mora resecentrum (Mora)",
         #"inpPointTo":"Orsa busstn (Orsa)",

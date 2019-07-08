@@ -12,8 +12,11 @@ stops.execute("CREATE TABLE IF NOT EXISTS trips(route_id INT,service_id INT,trip
 stops.execute("CREATE INDEX IF NOT EXISTS rid ON  trips(route_id);")
 stops.execute("CREATE TABLE IF NOT EXISTS routes(route_id INT,agency_id INT,route_short_name TEXT,route_long_name TEXT,route_type INT,route_url TEXT);")
 stops.execute("CREATE INDEX IF NOT EXISTS ragency_id ON routes(agency_id);")
-stops.execute("DELETE FROM stops;")
-stops.execute("DELETE FROM astops;")
+stops.execute("CREATE TABLE IF NOT EXISTS akstops(agency_id INT, agency_stop_name TEXT, stop_lat REAL, stop_lon REAL, agency_stop_id INT);")
+stops.execute("CREATE INDEX IF NOT EXISTS op ON akstops(agency_id);")
+stops.execute("CREATE INDEX IF NOT EXISTS aid ON astops(agency_id, stop_id);")
+#stops.execute("DELETE FROM stops;")
+#stops.execute("DELETE FROM astops;")
 stops.execute("VACUUM")
 print "sqlite3 stops"
 print '.separator ","'
