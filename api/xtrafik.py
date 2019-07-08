@@ -49,7 +49,7 @@ def StopIdToName(id):
         if meters < dist:
             dist = meters
             best = row
-    return str(row[3].encode("utf8")+"|"+str(best[2])+"|0")
+    return str(best[3].encode("utf8")+"|"+str(best[2])+"|0")
 
 def distance(orgin,dest): 
     # approximate radius of earth in km
