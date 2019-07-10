@@ -15,8 +15,10 @@ stops.execute("CREATE INDEX IF NOT EXISTS ragency_id ON routes(agency_id);")
 stops.execute("CREATE TABLE IF NOT EXISTS akstops(agency_id INT, agency_stop_name TEXT, stop_lat REAL, stop_lon REAL, agency_stop_id INT);")
 stops.execute("CREATE INDEX IF NOT EXISTS op ON akstops(agency_id);")
 stops.execute("CREATE INDEX IF NOT EXISTS aid ON astops(agency_id, stop_id);")
-#stops.execute("DELETE FROM stops;")
-#stops.execute("DELETE FROM astops;")
+stops.execute("CREATE TABLE IF NOT EXISTS orter(ort_kommun_scbid INT, ort_scbid TEXT, ort_name TEXT, ort_lat REAL, ort_lon REAL);")
+stops.execute("CREATE UNIQUE INDEX IF NOT EXISTS oid ON orter(ort_scbid);")
+stops.execute("DELETE FROM stops;")
+stops.execute("DELETE FROM astops;")
 stops.execute("VACUUM")
 print "sqlite3 stops"
 print '.separator ","'
@@ -25,3 +27,5 @@ print '.import agency_stops.txt astops'
 print '.import stop_times.txt stop_times'
 print '.import trips.txt trips'
 print '.import routes.txt routes'
+print '.separator "|"'
+print '.import orter.txt orter'
