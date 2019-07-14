@@ -37,7 +37,10 @@
                               Från
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: frompickershow }">
-                                <button class="dropdown-item" type="button" v-on:click='from = ""; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Ta bort</button>
+                                <button class="dropdown-item" type="button" v-on:click='from = ""; from_type="stop"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Hållplats/Station</button>
+                                <button class="dropdown-item" type="button" v-on:click='from = ""; from_type="ort"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Stad/Ort/By</button>
+                                <button class="dropdown-item" type="button" v-on:click='from = "";  from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Resa fältet</button>
+                                
                             </div>
                             <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
                                 <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
@@ -58,7 +61,9 @@
                               Till
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: topickershow }">
-                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Ta bort</button>
+                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="stop"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Hållplats/Station</button>
+                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="ort"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Stad/Ort/By</button>
+                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Resa fältet</button>
                             </div>
                             <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
                                 <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
@@ -343,12 +348,13 @@
         xhr.send();
         }
 
-        function getAjaxCSV(url, success) {
+        function getAjaxCSV(url, success, sep_type=",") {
             var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
             xhr.open('GET', url);
+            var septype = sep_type;
             xhr.onload = function() {
                 if ( xhr.readyState>3 && xhr.status === 200) {
-                    success(CSVToArray(xhr.responseText,","));
+                    success(CSVToArray(xhr.responseText,septype));
                 }
             };
         xhr.send();
@@ -387,7 +393,10 @@
               "8":"Färja"
             },
             frompickershow: false,
+            from_type: "stop",
+            allaorter: [],
             topickershow: false,
+            to_type: "stop",
             months:["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"],
             sortList: "",
             from:"",
@@ -661,7 +670,16 @@
                 }
                 next.loading = xhr.readyState;
               }
-              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&originId='+this.from_station.id+'&destId='+this.to_station.id+'&time='+this.time+'&date='+this.date+'&format=json'+context);
+              
+              dest = '&destId='+this.to_station.id;
+              from = '&originId='+this.from_station.id;
+              if (this.from_type="ort"){
+                from = "&originCoordLat="+this.from_station.lat+"&originCoordLong="+this.from_station.lon
+              }
+              if (this.to_type="ort"){
+                dest = "&destCoordLat="+this.to_station.lat+"&destCoordLong="+this.to_station.lon
+              }
+              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9'+dest+from+'&time='+this.time+'&date='+this.date+'&format=json'+context);
               xhr.send(null);
             },
             save_search: function (){
@@ -732,6 +750,10 @@
                 stations = csv.filter(station => station[0]!=="");
                 then.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
             });
+            getAjaxCSV("static_data/orter.txt", function (csv) {
+                orter = csv.filter(ort => ort[0]!=="");
+                then.allaorter = orter.map(ort => ({"scbid":ort[0],"id":ort[1],"name":ort[2],"lat":ort[3],"lon":ort[4]})).slice(1);
+            },"|");
             getAjax("static_data/areas.json", function (areas) {
                 then.areas = areas;
             });
@@ -879,6 +901,9 @@
               if (this.from == "" ){
                 return [];
               }
+              if(this.from_type == "ort"){
+                return this.allaorter.filter(this.filterFrom);
+              }
               startStations = this.allstations.filter(this.filterFrom);
               inStations = this.allstations.slice(0, 10);
               if (startStations.length < 10){
@@ -890,6 +915,9 @@
             toStations: function () {
               if (this.to == "" ){
                 return []
+              }
+              if(this.to_type == "ort"){
+                return this.allaorter.filter(this.filterTo);
               }
               startStations = this.allstations.filter(this.filterTo);
               inStations = this.allstations.slice(0, 10);
