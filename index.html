@@ -46,7 +46,7 @@
                                 <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
                             </div>
                         </div>
-                        <input type="text" class="form-control border-dark" v-model="from">
+                        <input type="text" class="form-control border-dark" v-bind:placeholder="place_holder_point[from_type]" v-model="from">
                     </div>
                 </div>
                 <div class="col-lg-1 col-md-2 p-1">
@@ -69,7 +69,7 @@
                                 <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
                             </div>
                         </div>
-                        <input type="text" class="form-control border-dark" v-model="to">
+                        <input type="text" class="form-control border-dark" v-bind:placeholder="place_holder_point[to_type]" v-model="to">
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 p-1">
@@ -394,6 +394,7 @@
             },
             frompickershow: false,
             from_type: "stop",
+            place_holder_point:{"stop":"Hållplats","ort":"Ortsnamn"},
             allaorter: [],
             topickershow: false,
             to_type: "stop",
