@@ -33,12 +33,12 @@
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn btn-secondary dropdown-toggle" v-on:click="frompickershow=!frompickershow">
+                            <button class="btn dropdown-toggle" v-bind:class="[frompickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="frompickershow=!frompickershow">
                               Från
-                            </button>
+                            </button><!--v-bind:class="{ (from_type=='ort'):'active'}"-->
                             <div class="dropdown-menu p-0" v-bind:class="{ show: frompickershow }">
-                                <button class="dropdown-item" type="button" v-on:click='from = ""; from_type="stop"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Hållplats/Station</button>
-                                <button class="dropdown-item" type="button" v-on:click='from = ""; from_type="ort"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Stad/Ort/By</button>
+                                <button class="dropdown-item" v-bind:class="{from_type:'active'}" type="button" v-on:click='from = ""; from_type="stop"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Hållplats</button>
+                                <button class="dropdown-item"  type="button" v-on:click='from = ""; from_type="ort"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Ort</button>
                                 <button class="dropdown-item" type="button" v-on:click='from = "";  from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Resa fältet</button>
                                 
                             </div>
@@ -51,18 +51,18 @@
                 </div>
                 <div class="col-lg-1 col-md-2 p-1">
                     <div>
-                        <button type="button" class="btn btn-secondary btn-block" v-on:click="switch_from_to">⇄</button>
+                        <button type="button" class="btn btn-outline-secondary btn-block" v-on:click="switch_from_to">⇄</button>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn btn-secondary dropdown-toggle" v-on:click="topickershow=!topickershow">
+                            <button class="btn dropdown-toggle" v-bind:class="[topickershow ? 'btn-primary' : 'btn-outline-secondary']"  v-on:click="topickershow=!topickershow">
                               Till
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: topickershow }">
-                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="stop"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Hållplats/Station</button>
-                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="ort"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Stad/Ort/By</button>
+                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="stop"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Hållplats</button>
+                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="ort"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Ort</button>
                                 <button class="dropdown-item" type="button" v-on:click='to = ""; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Resa fältet</button>
                             </div>
                             <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
@@ -75,7 +75,7 @@
                 <div class="col-lg-4 col-md-6 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle" v-bind:class="[datepickershow ? 'btn-primary' : 'btn-secondary']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
+                            <button class="btn dropdown-toggle" v-bind:class="[datepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
                               Dag
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: datepickershow }">
@@ -104,9 +104,9 @@
                                 </table>
                             </div>
                         </div>
-                        <input type="text" class="form-control" disabled v-model="dateshow" placeholder="2018-01-20 16:00">
+                        <input type="text" class="form-control" v-model="dateshow" placeholder="2018-01-20 16:00">
                         <div class="input-group-append">
-                            <button class="btn dropdown-toggle"  v-bind:class="[timepickershow ? 'btn-primary' : 'btn-secondary']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
+                            <button class="btn dropdown-toggle"  v-bind:class="[timepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
                               Tid
                             </button>
                             <div class="dropdown-menu dropdown-menu-right p-0" v-bind:class="{ show: timepickershow }">
@@ -258,9 +258,9 @@
                 <div class="col-lg-12 p-1">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="text-center">Priser och tidtabeller för</h5>
+                            <h5 class="text-center">Priser och tidtabeller för</h5> 
                             <a v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
-                            <img style="height: 20px; margin:7px;"  v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
                             </a>
                             <h5 class="text-center">Endast tidtabeller för</h5>
                             <a v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
@@ -405,7 +405,7 @@
             to:"",
             to_station: {"id":"","name":"","scbid":""},
             date:now.toISOString().substring(0,10),
-            hh:"16",
+            hh:"08",
             mm:"00",
             timepickershow: false,
             datepickershow: false,
@@ -420,6 +420,8 @@
             sortBy: "best",
             trips: [],
             areas: {},
+            donotuseoperators: [],
+            travelmodes: [2,4,8,16,32,64,128,256],
             sortOpts: { 
                 "price":"Lägsta pris",
                 "time":"Kortast restid",
@@ -441,6 +443,13 @@
             traveltypes: {}
           },
           methods: {
+            grayoperator: function(opid){
+                if(this.donotuseoperators.includes(opid)){
+                  return {"opacity":0.2}
+                } else {
+                  return {}
+                }
+            },
             sameDate: function(indate){
                 return this.date == indate.toISOString().substring(0,10);
             },
@@ -679,7 +688,9 @@
               if (this.to_type="ort"){
                 dest = "&destCoordLat="+this.to_station.lat+"&destCoordLong="+this.to_station.lon
               }
-              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9'+dest+from+'&time='+this.time+'&date='+this.date+'&format=json'+context);
+              products = "&products="+this.travelmodes.reduce((next,old)=>next+old);
+              operators = "&operators="+Object.keys(this.alloperators).filter( ( op ) => !this.donotuseoperators.includes( op ) ).join(",");
+              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9'+operators+products+dest+from+'&time='+this.time+'&date='+this.date+'&format=json'+context);
               xhr.send(null);
             },
             save_search: function (){
