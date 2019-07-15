@@ -33,7 +33,7 @@
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle" v-bind:class="[frompickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="frompickershow=!frompickershow">
+                            <button class="btn dropdown-toggle bg-white" v-bind:class="[frompickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="frompickershow=!frompickershow">
                               Från
                             </button><!--v-bind:class="{ (from_type=='ort'):'active'}"-->
                             <div class="dropdown-menu p-0" v-bind:class="{ show: frompickershow }">
@@ -46,18 +46,18 @@
                                 <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
                             </div>
                         </div>
-                        <input type="text" class="form-control" v-model="from">
+                        <input type="text" class="form-control border-dark" v-model="from">
                     </div>
                 </div>
                 <div class="col-lg-1 col-md-2 p-1">
                     <div>
-                        <button type="button" class="btn btn-outline-secondary btn-block" v-on:click="switch_from_to">⇄</button>
+                        <button type="button" class="btn btn-outline-secondary btn-block bg-white" v-on:click="switch_from_to">⇄</button>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle" v-bind:class="[topickershow ? 'btn-primary' : 'btn-outline-secondary']"  v-on:click="topickershow=!topickershow">
+                            <button class="btn dropdown-toggle bg-white" v-bind:class="[topickershow ? 'btn-primary' : 'btn-outline-secondary']"  v-on:click="topickershow=!topickershow">
                               Till
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: topickershow }">
@@ -69,13 +69,13 @@
                                 <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
                             </div>
                         </div>
-                        <input type="text" class="form-control" v-model="to">
+                        <input type="text" class="form-control border-dark" v-model="to">
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle" v-bind:class="[datepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
+                            <button class="btn dropdown-toggle bg-white" v-bind:class="[datepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
                               Dag
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: datepickershow }">
@@ -104,9 +104,9 @@
                                 </table>
                             </div>
                         </div>
-                        <input type="text" class="form-control" v-model="dateshow" placeholder="2018-01-20 16:00">
+                        <input type="text" class="form-control border-dark" v-model="dateshow" placeholder="2018-01-20 16:00">
                         <div class="input-group-append">
-                            <button class="btn dropdown-toggle"  v-bind:class="[timepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
+                            <button class="btn dropdown-toggle bg-white"  v-bind:class="[timepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
                               Tid
                             </button>
                             <div class="dropdown-menu dropdown-menu-right p-0" v-bind:class="{ show: timepickershow }">
