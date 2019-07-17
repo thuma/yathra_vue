@@ -265,13 +265,20 @@
                 <div class="col-lg-12 p-1">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="text-center">Priser och tidtabeller för</h5> 
-                            <a v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
+                            <h5 class="text-center">Priser och tidtabeller för <span v-if="!selectoperators" class="badge badge-info" v-on:click="selectoperators = !selectoperators">Välj</span></h5>
+                            <div v-if="selectoperators"><button class="btn btn-sm btn-secondary" v-on:click="donotuseoperators=[]">Välj alla</button> <button class="btn btn-sm btn-secondary"  v-on:click="donotuseoperators=Object.keys(yathra.alloperators)">Dölj alla</button></div>
+                            <a v-if="selectoperators" v-on:click="toggle_operator(opid)" v-for="(data, opid) in traveltypes">
+                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            </a>
+                            <a v-if="!selectoperators" v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
                             <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
                             </a>
                             <h5 class="text-center">Endast tidtabeller för</h5>
-                            <a v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
-                            <img style="height: 20px; margin:7px;"  v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            <a v-if="selectoperators" v-on:click="toggle_operator(opid)" v-for="(operatordata, opid) in alloperatorsOtt">
+                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            </a>
+                            <a v-if="!selectoperators" v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
+                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
                             </a>
                             <h5 class="text-center">Sätt att resa</h5>
                             <p class="text-center">
@@ -405,6 +412,7 @@
               "7":"Buss",
               "8":"Färja"
             },
+            selectoperators: false,
             frompickershow: false,
             from_type: "stop",
             place_holder_point:{"stop":"Hållplats","ort":"Ortsnamn"},
@@ -457,6 +465,13 @@
             traveltypes: {}
           },
           methods: {
+            toggle_operator: function(opid){
+              if(this.donotuseoperators.indexOf(opid)==-1){
+                this.donotuseoperators.push(opid)
+              } else {
+                this.donotuseoperators = this.donotuseoperators.filter(oneid => oneid !== opid);
+              }
+            },
             toggle_mode: function(id){
                code = Math.pow(2,Number(id));
                if(this.mode_in_list(id)){
