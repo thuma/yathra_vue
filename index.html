@@ -801,8 +801,11 @@
               "to_type",
               "from_type"];
             var saveto = this;
-            savedata = JSON.parse(atob(document.location.hash.replace("#","")));
-            restore.forEach(savename => saveto[savename]=savedata[savename]);
+            var hashdata = document.location.hash.replace("#","");
+            if(hashdata[0]=="{"){
+              savedata = JSON.parse(atob(hashdata));
+              restore.forEach(savename => saveto[savename]=savedata[savename]);
+            }
             },
           computed: {
             alloperatorsOtt: function(){
