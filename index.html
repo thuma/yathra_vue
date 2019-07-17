@@ -19,6 +19,12 @@
             button.kommun {
             line-height: 15px;
             }
+            body {
+            background-color: #e3ebf5;
+            }
+            .btn-outline-secondary {
+            background-color: #fff;
+            }
         </style>
         <title>Yathra - Plannera din resa</title>
     </head>
@@ -33,14 +39,14 @@
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle bg-white" v-bind:class="[frompickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="frompickershow=!frompickershow">
+                            <button class="btn dropdown-toggle btn-outline-secondary" v-bind:class="[frompickershow ? 'active' : '']" v-on:click="frompickershow=!frompickershow">
                               Från
-                            </button><!--v-bind:class="{ (from_type=='ort'):'active'}"-->
+                            </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: frompickershow }">
-                                <button class="dropdown-item" v-bind:class="{from_type:'active'}" type="button" v-on:click='from = ""; from_type="stop"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Hållplats</button>
-                                <button class="dropdown-item"  type="button" v-on:click='from = ""; from_type="ort"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Ort</button>
+                                <button class="dropdown-item" v-bind:class="[ (from_type == 'stop') ? 'active':'']" type="button" v-on:click='from = ""; from_type="stop"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Hållplats</button>
+                                <button class="dropdown-item" v-bind:class="[ (from_type == 'ort') ? 'active':'']"type="button" v-on:click='from = ""; from_type="ort"; from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Ort</button>
+                                <div class="dropdown-divider"></div>
                                 <button class="dropdown-item" type="button" v-on:click='from = "";  from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Resa fältet</button>
-                                
                             </div>
                             <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
                                 <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
@@ -51,18 +57,19 @@
                 </div>
                 <div class="col-lg-1 col-md-2 p-1">
                     <div>
-                        <button type="button" class="btn btn-outline-secondary btn-block bg-white" v-on:click="switch_from_to">⇄</button>
+                        <button type="button" class="btn btn-outline-secondary btn-block" v-on:click="switch_from_to">⇄</button>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-5 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle bg-white" v-bind:class="[topickershow ? 'btn-primary' : 'btn-outline-secondary']"  v-on:click="topickershow=!topickershow">
+                            <button class="btn dropdown-toggle btn-outline-secondary" v-bind:class="[topickershow ? 'active' : '']"  v-on:click="topickershow=!topickershow">
                               Till
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: topickershow }">
-                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="stop"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Hållplats</button>
-                                <button class="dropdown-item" type="button" v-on:click='to = ""; to_type="ort"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Ort</button>
+                                <button class="dropdown-item" v-bind:class="[ (to_type == 'stop') ? 'active':'']" type="button" v-on:click='to = ""; to_type="stop"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Hållplats</button>
+                                <button class="dropdown-item" v-bind:class="[ (to_type == 'ort') ? 'active':'']" type="button" v-on:click='to = ""; to_type="ort"; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Ort</button>
+                                <div class="dropdown-divider"></div>
                                 <button class="dropdown-item" type="button" v-on:click='to = ""; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Resa fältet</button>
                             </div>
                             <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
@@ -75,7 +82,7 @@
                 <div class="col-lg-4 col-md-6 p-1">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button class="btn dropdown-toggle bg-white" v-bind:class="[datepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
+                            <button class="btn dropdown-toggle btn-outline-secondary" v-bind:class="[datepickershow ? 'active' : '']" v-on:click="timepickershow=false;datepickershow=!datepickershow">
                               Dag
                             </button>
                             <div class="dropdown-menu p-0" v-bind:class="{ show: datepickershow }">
@@ -106,16 +113,16 @@
                         </div>
                         <input type="text" class="form-control border-dark" v-model="dateshow" placeholder="2018-01-20 16:00">
                         <div class="input-group-append">
-                            <button class="btn dropdown-toggle bg-white"  v-bind:class="[timepickershow ? 'btn-primary' : 'btn-outline-secondary']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
+                            <button class="btn dropdown-toggle btn-outline-secondary"  v-bind:class="[timepickershow ? 'active' : '']" v-on:click="datepickershow=false;timepickershow=!timepickershow">
                               Tid
                             </button>
-                            <div class="dropdown-menu dropdown-menu-right p-0" v-bind:class="{ show: timepickershow }">
+                            <div class="dropdown-menu dropdown-menu-right p-4" v-bind:class="{ show: timepickershow }">
                               <div class="row">
                                 <div class="input-group col-6">
                                   <div class="input-group-prepend">
                                     <button class="btn btn-outline-secondary" type="button" v-on:click="hh--; if(hh<0){hh=00}">-</button>
                                   </div>
-                                  <input type="text" class="form-control" v-model="hh" placeholder="HH">
+                                  <input type="text" class="form-control text-center border-dark" v-model="hh" placeholder="HH">
                                   <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" v-on:click="hh++; if(hh>23){hh=23}">+</button>
                                   </div>
@@ -124,7 +131,7 @@
                                   <div class="input-group-prepend">
                                     <button class="btn btn-outline-secondary" type="button" v-on:click="mm=Number(mm)-10; if(mm<0){mm=00}">-</button>
                                   </div>
-                                  <input type="text" class="form-control" v-model="mm" placeholder="MM">
+                                  <input type="text" class="form-control text-center border-dark" v-model="mm" placeholder="MM">
                                   <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" v-on:click="mm=Number(mm)+10; if(mm>59){mm=50}">+</button>
                                   </div>
