@@ -273,6 +273,12 @@
                             <a v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
                             <img style="height: 20px; margin:7px;"  v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
                             </a>
+                            <h5 class="text-center">Sätt att resa</h5>
+                            <p class="text-center">
+                              <span v-bind:class="[mode_in_list(id)? '' : 'bg-secondary']"v-for="(mode, id) in catToName" v-on:click="toggle_mode(id)">
+                                {{catToIcon[id]}} {{mode}} | 
+                              </span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -451,6 +457,20 @@
             traveltypes: {}
           },
           methods: {
+            toggle_mode: function(id){
+               code = Math.pow(2,Number(id));
+               if(this.mode_in_list(id)){
+                    var index = this.travelmodes.indexOf(code);
+                    this.travelmodes.splice(index,1);
+                }
+                else{
+                    this.travelmodes.push(code);
+                }
+            },
+            mode_in_list: function(id){
+              code = Math.pow(2,Number(id));
+              return this.travelmodes.indexOf(code) !== -1;
+            },
             grayoperator: function(opid){
                 if(this.donotuseoperators.includes(opid)){
                   return {"opacity":0.2}
@@ -690,10 +710,10 @@
               
               dest = '&destId='+this.to_station.id;
               from = '&originId='+this.from_station.id;
-              if (this.from_type="ort"){
+              if (this.from_type=="ort"){
                 from = "&originCoordLat="+this.from_station.lat+"&originCoordLong="+this.from_station.lon
               }
-              if (this.to_type="ort"){
+              if (this.to_type=="ort"){
                 dest = "&destCoordLat="+this.to_station.lat+"&destCoordLong="+this.to_station.lon
               }
               products = "&products="+this.travelmodes.reduce((next,old)=>next+old);
@@ -802,7 +822,7 @@
               "from_type"];
             var saveto = this;
             var hashdata = document.location.hash.replace("#","");
-            if(hashdata[0]=="{"){
+            if(hashdata !== ""){
               savedata = JSON.parse(atob(hashdata));
               restore.forEach(savename => saveto[savename]=savedata[savename]);
             }
