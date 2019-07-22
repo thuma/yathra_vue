@@ -205,15 +205,13 @@
                         <li v-for="trip, i in sortBySelected" class="list-group-item">
                             <div class="row">
                                 <div class="col-lg-1 col-sm-2 col-4 p-0">
-                                    <span title="Avgång dag"> {{ travelDate(trip) }}</span>
+                                    <span title="Avgång dag"> {{ travelDate(trip) }} </span>
                                 </div>
                                 <div class="col-lg-1 col-sm-2 col-4 p-0">
-                                    <span title="Avgång tid">
-                                    {{ trip.LegList.Leg[0].Origin.time.substring(0,5) }}
-                                    </span>
+                                    <span title="Avgång tid"> {{ travelStartTime(trip) }} </span>
                                 </div>
                                 <div class="col-lg-1 col-sm-2 col-4 p-0">
-                                    <span title="Ankomst tid">{{ trip.LegList.Leg.slice(-1)[0].Destination.time.substring(0,5) }}</span>
+                                    <span title="Ankomst tid">{{ travelEndTime(trip) }}</span>
                                 </div>
                                 <div class="col-lg-1 col-sm-2 col-4 p-0">
                                     <span title="Restid">{{ travelTime(trip.LegList.Leg) }}</span>
@@ -545,6 +543,24 @@
               });
               return (end - start)
             },
+            travelStartTime: function (trip){
+              var start = "XX:XX"
+              trip.LegList.Leg.forEach(function(leg){
+                if(leg.type !== "WALK" && leg.type !== "TRSF" && start == "XX:XX"){
+                  start = leg.Origin.time.substring(0,5);
+                }
+              });
+              return start;
+            },
+            travelEndTime: function (trip){
+              var end
+              trip.LegList.Leg.forEach(function(leg){
+                if(leg.type !== "WALK" && leg.type !== "TRSF"){
+                  end = leg.Destination.time.substring(0,5);
+                }
+              });
+              return end
+            },
             changes: function(legs){
               var count = -1
               legs.forEach(function(leg){
@@ -866,7 +882,6 @@
                     var opid = data[0];
                     next.$set(next.alloperators, data[0], {"name":data[1], "url":data[2],"img":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="});
                     getImg("/images_no_fallback/"+data[0]+".jpg",function(data){
-                      console.log(opid);
                       next.alloperators[opid].img = URL.createObjectURL(new Blob([data],{type: 'image/jpeg'}));
                     });
                 });
