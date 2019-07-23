@@ -225,17 +225,20 @@
                                     <button v-on:click="detailsToggle(trip)" class="btn btn-secondary btn-sm">⇄ {{ changes(trip.LegList.Leg) }} </button>
                                 </div>
                                 <div class="col-lg-6 col-sm-12 col-12 p-0">
-                                    <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="'/images_no_fallback/'+operatorid+'.jpg'" >
+                                    <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="operatorImageById(operatorid)" >
                                 </div>
                                 <div class="col-lg-12 p-0">
-                                    <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops">
-                                        <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'">
+                                    <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops" class="row">
+                                        <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'" class="col-lg-6 col-md-12">
                                             {{ leg.Origin.time }} {{ leg.Origin.name }} - 
-                                            {{ leg.Destination.time }} {{ leg.Destination.name }}<br>
-                                            <span v-bind:title="catToName[leg.Product.catCode]">{{ catToIcon[leg.Product.catCode] }} </span>
+                                            {{ leg.Destination.time }} {{ leg.Destination.name }}
+                                        </div>
+                                        <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'" class="col-lg-6 col-md-12">
+                                            <span v-bind:title="catToName[leg.Product.catCode]">{{ catToIcon[leg.Product.catCode] }} {{ leg.Product.name }} </span>
                                             <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
-                                            <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="'/images_no_fallback/'+leg.Product.operatorCode+'.jpg'">
+                                            <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="operatorImageById(leg.Product.operatorCode)">
                                             </a>
+                                            <span v-for="(data, icon) in grouptypes(leg)" v-bind:title="data.texts">{{ icon }}</span>
                                             <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">
                                                 {{ ifdesc(leg) }} för {{ ifprice(leg) }} SEK</a>
                                         </div>
@@ -270,14 +273,14 @@
                             </a>
                             
                             <a v-if="!selectoperators" v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
-                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="operatorImageById(opid)">
                             </a>
                             <h5 class="text-center">Endast tidtabeller för</h5>
                             <a v-if="selectoperators" v-on:click="toggle_operator(opid)" v-for="(operatordata, opid) in alloperatorsOtt">
-                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
                             </a>
                             <a v-if="!selectoperators" v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
-                            <img style="height:20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="'/images_no_fallback/'+opid+'.jpg'">
+                            <img style="height:20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
                             </a>
                             <hr>
                             <p v-if="!selectoperators" class="text-center">
@@ -488,9 +491,101 @@
             "254","255","258","261","648","586",
             "380","267","252","289","265","317",
             "266","268","269","271","273","272"],
-            traveltypes: {}
+            traveltypes: {},
+            travelinfo:{
+                "A1":{"text":"Mat 1 klass","icon":"🍽"},
+                "A6":{"text":"Affärs Plus finns","icon":"ⓘ"},
+                "A7":{"text":"Djur ej tillåtet","icon":"ⓘ"},
+                "AA":{"text":"Endast 2 klass","icon":"💺"},
+                "AB":{"text":"2 kl har ej reservering","icon":"ⓘ"},
+                "AC":{"text":"Servering","icon":"🍽"},
+                "AD":{"text":"Bistrovagn","icon":"🍽"},
+                "AE":{"text":"Ej reservering","icon":"ⓘ"},
+                "AF":{"text":"Obligatorisk platsbokning","icon":"💺"},
+                "AG":{"text":"Frivillig platsbokning","icon":"💺"},
+                "AK":{"text":"Familjevagn","icon":"ⓘ"},
+                "AL":{"text":"Biovagn","icon":"ⓘ"},
+                "AM":{"text":"Särtillägg","icon":"ⓘ"},
+                "AN":{"text":"Rullstolslyft","icon":"♿"},
+                "AO":{"text":"Ej kortdistans","icon":"ⓘ"},
+                "AP":{"text":"Länstrafikpris vid lokal resa","icon":"ⓘ"},
+                "AU":{"text":"Panoramavagn","icon":"ⓘ"},
+                "AW":{"text":"WiFi","icon":"📶"},
+                "AZ":{"text":"Förbeställd frukost","icon":"🍽"},
+                "BF":{"text":"1 kl har ej reservering","icon":"ⓘ"},
+                "BG":{"text":"Bagage","icon":"ⓘ"},
+                "D1":{"text":"Djur tillåtna, se regler","icon":"🐕"},
+                "D2":{"text":"Djur tillåtna, se regler.","icon":"🐕"},
+                "D3":{"text":"Djur tillåtna, se regler..","icon":"🐕"},
+                "EL":{"text":"Eluttag","icon":"🔌"},
+                "ES":{"text":"Ej sittvagn","icon":"ⓘ"},
+                "FB":{"text":"Cyklar tillåtna","icon":"ⓘ"},
+                "FC":{"text":"Cykelplats (Obl.bokning)","icon":"ⓘ"},
+                "FM":{"text":"1 kl u mat har ej reservering","icon":"🍽"},
+                "KI":{"text":"Skidor","icon":"ⓘ"},
+                "KO":{"text":"Kontorsvagn","icon":"ⓘ"},
+                "KU":{"text":"Kulturvagn","icon":"ⓘ"},
+                "LW":{"text":"Liggvagn","icon":"🛏️"},
+                "PE":{"text":"Dags-/ Kvällspress i 1 klass","icon":"ⓘ"},
+                "PS":{"text":"Sällskapsvagn","icon":"ⓘ"},
+                "S4":{"text":"4-bäddskupé i sovvagn","icon":"🛏️"},
+                "SA":{"text":"Stena Line buffé","icon":"🍽"},
+                "SD":{"text":"Öl, vin och spritservering","icon":"🍽"},
+                "SF":{"text":"Frukost 1 klass","icon":"🍽"},
+                "SG":{"text":"Krog","icon":"🍽"},
+                "SH":{"text":"Sänkt hastighet. Kan försenas.","icon":"ⓘ"},
+                "SI":{"text":"Servering finns ej","icon":"ⓘ"},
+                "SK":{"text":"Kafé","icon":"🍽"},
+                "SL":{"text":"Sov- och liggvagn","icon":"🛏️"},
+                "SM":{"text":"Maträtt","icon":"🍽"},
+                "SN":{"text":"Måltid Plus","icon":"🍽"},
+                "SQ":{"text":"Förbeställd mat","icon":"🍽"},
+                "SR":{"text":"Förbeställd Frukost","icon":"🍽"},
+                "SS":{"text":"Servering vid sittplats 1 kl","icon":"🍽"},
+                "SU":{"text":"1 klass med extra komfort","icon":"ⓘ"},
+                "SV":{"text":"Varm mat kan förbeställas","icon":"🍽"},
+                "SW":{"text":"Sovvagn","icon":"🛏️"},
+                "SX":{"text":"Ej wifi","icon":"ⓘ"},
+                "SY":{"text":"Ej luftkonditionering","icon":"ⓘ"},
+                "SZ":{"text":"Kaffebuffé 1 klass","icon":"🍽"},
+                "TG":{"text":"GRÖNA TÅGET","icon":"ⓘ"},
+                "V1":{"text":"X-Tåget","icon":"ⓘ"},
+                "V3":{"text":"SJ3000","icon":"ⓘ"},
+                "VA":{"text":"Arlanda Express","icon":"ⓘ"},
+                "VC":{"text":"SJ/NSB","icon":"ⓘ"},
+                "VF":{"text":"Östgötapendeln","icon":"ⓘ"},
+                "VG":{"text":"Pågatågen","icon":"ⓘ"},
+                "VI":{"text":"Kustpilen","icon":"ⓘ"},
+                "VK":{"text":"Krösatåg","icon":"ⓘ"},
+                "VO":{"text":"Norrtåg","icon":"ⓘ"},
+                "VP":{"text":"Upptåget","icon":"ⓘ"},
+                "VS":{"text":"Blå Tåget - Skandinaviska Jernbanor","icon":"ⓘ"},
+                "VT":{"text":"Tåg I Bergslagen","icon":"ⓘ"},
+                "VV":{"text":"Västtågen","icon":"ⓘ"},
+                "VW":{"text":"Arctic Circle","icon":"ⓘ"},
+                "VX":{"text":"X2000","icon":"ⓘ"}
+                }
           },
           methods: {
+            grouptypes: function(leg){
+            var icons = {}
+            var next = this
+            try {
+              leg.Notes.Note[0].key;
+            }
+            catch(e) {
+              return []
+            }
+            leg.Notes.Note.forEach(function(note){
+              thisicon = next.travelinfo[note.key].icon;
+              if(icons[thisicon]){
+                icons[thisicon].texts.push(next.travelinfo[note.key].text);
+              } else {
+                icons[thisicon] = {"texts":[next.travelinfo[note.key].text]}
+              }
+              });
+            return icons;
+            },
             toggle_operator: function(opid){
               if(this.donotuseoperators.indexOf(opid)==-1){
                 this.donotuseoperators.push(opid)
