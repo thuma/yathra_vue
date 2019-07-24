@@ -225,26 +225,51 @@
                                     <button v-on:click="detailsToggle(trip)" class="btn btn-secondary btn-sm">⇄ {{ changes(trip.LegList.Leg) }} </button>
                                 </div>
                                 <div class="col-lg-6 col-sm-12 col-12 p-0">
-                                    <img style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="operatorImageById(operatorid)" >
+                                    <img v-if="!trip.showAllStops" style="height: 13px; margin-right:4px;" v-for="operatorid in getUniqueOperators(trip.LegList.Leg)" v-bind:src="operatorImageById(operatorid)" >
                                 </div>
-                                <div class="col-lg-12 p-0">
-                                    <div v-for="leg in trip.LegList.Leg" v-if="trip.showAllStops" class="row">
-                                        <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'" class="col-lg-6 col-md-12">
-                                            {{ leg.Origin.time }} {{ leg.Origin.name }} - 
-                                            {{ leg.Destination.time }} {{ leg.Destination.name }}
+                                <div class="col-lg-12" v-if="trip.showAllStops">
+                                    <div v-for="leg in trip.LegList.Leg" v-if="leg.type!=='WALK' && leg.type!=='TRSF'" class="row">
+                                        <div  class="col-lg-1 col-2 p-0">
+                                            {{ leg.Origin.time.substring(0,5) }}
                                         </div>
-                                        <div v-if="leg.type!=='WALK' && leg.type!=='TRSF'" class="col-lg-6 col-md-12">
-                                            <span v-bind:title="catToName[leg.Product.catCode]">{{ catToIcon[leg.Product.catCode] }} {{ leg.Product.name }} </span>
+                                        <div  class="col-lg-5 col-10 p-0">
+                                            {{ leg.Origin.name }}
+                                        </div>
+                                        <div class="col-lg-6 col-sm-12 p-0">
                                             <a v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">
                                             <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="operatorImageById(leg.Product.operatorCode)">
-                                            </a>
-                                            <span v-for="(data, icon) in grouptypes(leg)" v-bind:title="data.texts">{{ icon }}</span>
-                                            <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn-sm btn btn-secondary">
-                                                {{ ifdesc(leg) }} för {{ ifprice(leg) }} SEK</a>
+                                            </a><br>
+                                            <span v-bind:title="catToName[leg.Product.catCode]">{{ catToIcon[leg.Product.catCode] }} {{ leg.Product.name }} </span>
+                                            <div v-if="ifcode(leg)">
+                                              <div class="input-group input-group-sm mb-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">Biljett</span>
+                                                </div>
+                                                <select class="custom-select custom-select-sm" v-on:change="getPrice(trip)" v-model:value="leg.typeid">
+                                                  <option v-for="(travelertype, id) in traveltypes[leg.Product.operatorCode]" v-bind:value="id" class="btn btn-secondary dropdown-toggle">{{travelertype}}</option>
+                                                </select>
+                                                <div class="input-group-append">
+                                                  <button v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn btn-sm btn-secondary">Köp för {{ ifprice(leg) }} SEK</button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div v-else="">
+                                              <a class="btn btn-sm btn-secondary" v-bind:href="operatorUrlById(leg.Product.operatorCode)" target="_blank">Sök pris på operatörens hemsida.</a>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="btn-group" v-if="trip.showAllStops">
-                                    <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
+                                        <div  class="col-lg-1 col-2 p-0">
+                                            {{ leg.Destination.time.substring(0,5) }}
+                                        </div>
+                                        <div  class="col-lg-5 col-10 p-0">
+                                            {{ leg.Destination.name }}
+                                        </div>
+                                        <div class="col-lg-6 col-md-6 col-sm-12 p-0">
+                                            <div class="btn-group btn-group-sm">
+                                              <button class="btn btn-secondary" v-for="(data, icon) in grouptypes(leg)" v-bind:title="data.texts" v-on:click="alert(data.texts)">{{ icon }}</button>
+                                              <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
+                                              <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">💾</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -577,12 +602,16 @@
               return []
             }
             leg.Notes.Note.forEach(function(note){
-              thisicon = next.travelinfo[note.key].icon;
-              if(icons[thisicon]){
-                icons[thisicon].texts.push(next.travelinfo[note.key].text);
-              } else {
-                icons[thisicon] = {"texts":[next.travelinfo[note.key].text]}
-              }
+              try {
+                thisicon = next.travelinfo[note.key].icon;
+                if(icons[thisicon]){
+                  icons[thisicon].texts.push(next.travelinfo[note.key].text);
+                } else {
+                  icons[thisicon] = {"texts":[next.travelinfo[note.key].text]}
+                }
+              } catch(e){
+                console.log(note.key);
+                }
               });
             return icons;
             },
@@ -790,8 +819,12 @@
                       catid = ids[j];
                     }
                   }
-                  search.travellersPerCategory[0].cat = catid;
-        
+                  if(!leg.typeid){
+                    search.travellersPerCategory[0].cat = catid;
+                    leg.typeid = catid;
+                  } else {
+                    search.travellersPerCategory[0].cat = leg.typeid;
+                  }
                   var thisleg = leg;
                   var thisf = next
                   postAjax("/price/"+leg.Product.operatorCode+"/api/v1/product", JSON.stringify(search), function(data){ thisf.$set(thisleg, 'price', data);});
