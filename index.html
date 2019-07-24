@@ -240,7 +240,7 @@
                                             <img style="height: 20px;" v-bind:title="leg.Product.operatorName" v-bind:src="operatorImageById(leg.Product.operatorCode)">
                                             </a><br>
                                             <span v-bind:title="catToName[leg.Product.catCode]">{{ catToIcon[leg.Product.catCode] }} {{ leg.Product.name }} </span>
-                                            <div v-if="ifcode(leg)">
+                                            <div v-if="traveltypes.hasOwnProperty(leg.Product.operatorCode)">
                                               <div class="input-group input-group-sm mb-3">
                                                 <div class="input-group-prepend">
                                                     <span class="input-group-text">Biljett</span>
@@ -249,7 +249,8 @@
                                                   <option v-for="(travelertype, id) in traveltypes[leg.Product.operatorCode]" v-bind:value="id" class="btn btn-secondary dropdown-toggle">{{travelertype}}</option>
                                                 </select>
                                                 <div class="input-group-append">
-                                                  <button v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn btn-sm btn-secondary">Köp för {{ ifprice(leg) }} SEK</button>
+                                                  <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn btn-sm btn-secondary">Köp för {{ ifprice(leg) }} SEK</button>
+                                                  <span v-else="" class="input-group-text">Hittar inget pris</span>
                                                 </div>
                                               </div>
                                             </div>
@@ -730,7 +731,7 @@
             },
             operatorUrlById: function(id){
                 if ( id == "327" || id == "328" ){ 
-                  return "https://track.adtraction.com/t/t?a=1213626540&as=1332239618&t=2&tk=1";
+                  return "https://track.adtraction.com/t/t?a=1213626540&as=1403272214&t=2&tk=1";
                 } else if (id == "838"){
                   return "https://tc.tradetracker.net/?c=26525&m=12&a=350004";
                 }
