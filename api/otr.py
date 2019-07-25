@@ -92,7 +92,7 @@ def search():
         "startName":fromdata["name"],
         "endName":todata["name"],
         "date":utcIsoToLocalOtrDate(search["temporal"]["earliestDepature"]),
-        "time":utcIsoToLocalOtrTime(search["temporal"]["latestArrival"]),
+        "time":utcIsoToLocalOtrTime(search["temporal"]["earliestDepature"]),
         "direction":"0",
         "span":"default",
         "traffictypes":"0",
@@ -108,7 +108,6 @@ def search():
     
     trips = []
     for trip in result.json()["Journeys"]:
-        print trip
         if stringToUnixTS(trip["Departure"]+"+02:00") >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["Arrival"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"]):
             trips.append(trip)
    

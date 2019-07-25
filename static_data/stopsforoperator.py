@@ -8,7 +8,7 @@ FROM routes
 INNER JOIN trips ON routes.route_id = trips.route_id 
 INNER JOIN stop_times ON trips.trip_id = stop_times.trip_id 
 INNER JOIN stops ON stop_times.stop_id = stops.stop_id
-WHERE agency_id = 364 GROUP BY stop_times.stop_id;''')
+WHERE agency_id = 555 GROUP BY stop_times.stop_id;''')
 
 for row in query:
     print "%s,%s,%s,%s" % (row[2],row[3],row[4],row[5])
