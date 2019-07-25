@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+from gevent import monkey; monkey.patch_all()
 import requests, json, sqlite3, datetime, urllib
 from bottle import get, post, run, request, response
 
@@ -804,4 +804,4 @@ def search():
     response.content_type = 'application/json'
     return json.dumps(products)
 
-run(host='127.0.0.1', port=8080, reloader=True)
+run(host='127.0.0.1', port=8080, reloader=True, server='gevent')

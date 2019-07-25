@@ -64,7 +64,6 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 602,Luleå Lokaltrafik,http://www.llt.lulea.se/,Europe/Stockholm,sv
 604,Trosabussen,http://www.trosabussen.se/,Europe/Stockholm,sv
 618,Ressels Rederi,http://ressel.se/,Europe/Stockholm,sv
-619,Blå Tåget,http://www.blataget.com/,Europe/Stockholm,sv
 626,Lindbergs Buss,http://www.lindbergsbuss.se/,Europe/Stockholm,sv
 629,Haparanda lokaltrafik,http://www.haparanda.se/boende-och-miljo/trafik-och-gator/ringlinjen.html,Europe/Stockholm,sv
 632,Roslagens Sjötrafik,http://www.roslagenssjotrafik.se/,Europe/Stockholm,sv
@@ -85,8 +84,8 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 819,BybergNordin,http://www.bybergnordin.se/,Europe/Stockholm,sv
 821,Söne Buss,http://sonebuss.se/,Europe/Stockholm,sv
 824,Kalix stadstrafik,http://www.kalix.se/Samhalle/Lokaltrafik-och-resa/,Europe/Stockholm,sv
-830,Cinderellabåtarna,http://www.stromma.se/,Europe/Stockholm,sv
 831,Ekerö kommun,http://www.trafikverket.se/farjerederiet/farjeleder/farjeleder-i-stockholm213/ekeroleden/,Europe/Stockholm,sv
+835,Bohusläns Skärgårdstrafik AB,http://www.bohustrafik.se/index.html,Europe/Stockholm,sv
 837,Kneippbynbussen,http://kneippbyn.se/bo-resa/kneippbynbussen/,Europe/Stockholm,sv
 838,Flixbus,https://www.flixbus.se/,Europe/Stockholm,sv
 841,Brukslinjen,http://www.hallstahammar.se/boende-miljo-och-trafik/gator-trafik-och-resande/kollektivtrafik,Europe/Stockholm,sv
