@@ -505,7 +505,7 @@
             trips: [],
             areas: {},
             donotuseoperators: [],
-            travelmodes: [2,4,8,16,32,64,128,256,512],
+            travelmodes: [1,2,4,8,16,32,64,128,256,512],
             sortOpts: { 
                 "price":"Lägsta pris",
                 "time":"Kortast restid",
@@ -921,7 +921,7 @@
               }
               products = "&products="+this.travelmodes.reduce((next,old)=>next+old);
               operators = "&operators="+Object.keys(this.alloperators).filter( ( op ) => !this.donotuseoperators.includes( op ) ).join(",");
-              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9'+operators+products+dest+from+'&time='+this.time+'&date='+this.date+'&format=json'+context);
+              xhr.open('GET', 'https://api.resrobot.se/v2/trip?key=78d03ab5-d9bc-4734-9e09-70ee80d286f9&destWalk=1,0,3000,100&originWalk=1,0,3000,100'+operators+products+dest+from+'&time='+this.time+'&date='+this.date+'&format=json'+context);
               xhr.send(null);
               
               save = ["from",
