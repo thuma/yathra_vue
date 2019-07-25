@@ -28,6 +28,14 @@
             }
         </style>
         <title>Biljettpriser - Hitta tider och priser för din resa!</title>
+        <script>
+          var locationdata = window.location.href.split("://");
+          if (locationdata[0]=="https"){
+            if (locationdata[1].indexOf("biljettpriser.nu")==-1){
+              window.location.href="https://biljettpriser.nu";
+            }
+          }
+        </script>
     </head>
     <body>
         <div id="yathra" class="container">
