@@ -4,6 +4,7 @@
 import requests, json, sqlite3, datetime, urllib, rt90, math, re
 from bottle import get, post, run, request, response
 from dateutil import parser, tz
+from geopy.distance import geodesic
 
 travelCats = {
     "VU":"Vuxen",
@@ -130,23 +131,9 @@ prisnamnnorr = [
     ""
     ]
 
-
 def distance(orgin,dest): 
-    # approximate radius of earth in km
-    R = 6373.0
-
-    lat1 = math.radians(orgin["lat"])
-    lon1 = math.radians(orgin["lon"])
-    lat2 = math.radians(dest["lat"])
-    lon2 = math.radians(dest["lon"])
-
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-
-    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    distance = R * c
-    return distance
+    distance = geodesic((orgin["lat"],orgin["lon"]),(dest["lat"],dest["lon"])).km
+    return distance*1.172
 
 def StopIdToData(id):
   for row in stops.execute("SELECT stop_lat,stop_lon,stop_name,stop_scbid FROM stops WHERE stop_id = %s" % id):
@@ -242,7 +229,6 @@ def search():
         for i, price in enumerate(prisdata):
           pris = float(price)
           if itravelCats[search["travellersPerCategory"][0]["cat"]] in prisnamn[i]:
-            print price
             vat = round(pris*0.06,2)
             url = "https://www.tabussen.nu/lanstrafiken/biljetter-och-priser/har-koper-du-biljetten/"
             pricelist.append({
