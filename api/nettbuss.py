@@ -13,8 +13,8 @@ travelCats = {
     "THE_YOUNG":"Ungdom (16-25 år)",
     "THE_ELDERLY":"Senior (65+ år)",
     "STUDENTS":"Student",
-    "CHILDREN":"Barn (7-15 år",
-    "BAB":"YBarn (0-6 år"
+    "CHILDREN":"Barn (7-15 år)",
+    "BABY":"Barn (0-6 år)"
 }
 
 db = sqlite3.connect("../static_data/stops")
@@ -106,8 +106,6 @@ def search():
     
     for traveller in search["travellersPerCategory"]:
         query["FareClassSelections"] += "BONUS_SCHEME_GROUP."+traveller['cat']+","+str(traveller['tra'])+";"
-    
-    print query
 
     result = requests.post(
         "https://www.nettbuss.se/sv/api/booking/GetDepartureJourneys",
