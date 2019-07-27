@@ -6,6 +6,8 @@
         <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="moment.js"></script>
+        <script src="moment-timezone.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue"></script>
         <style>
             .btn-secondary { 
@@ -256,7 +258,7 @@
                                                   <option v-for="(travelertype, id) in traveltypes[leg.Product.operatorCode]" v-bind:value="id" class="btn btn-secondary dropdown-toggle">{{travelertype}}</option>
                                                 </select>
                                                 <div class="input-group-append">
-                                                  <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn btn-sm btn-secondary">Köp för {{ ifprice(leg) }} SEK</button>
+                                                  <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn btn-sm btn-secondary">Köp {{ ifdesc(leg) }} för {{ ifprice(leg) }} SEK</button>
                                                   <span v-else="" class="input-group-text">Hittar inget pris</span>
                                                 </div>
                                               </div>
@@ -766,6 +768,22 @@
                   return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
                 }
             },
+            pricedata: function(leg){
+                try{
+                  var alldata = [];
+                  price = leg.price[0];
+                  price.forEach(function(oneprice){
+                      alldata.push({
+                      "amount":oneprice.fares[0].amount,
+                      "productTitle":oneprice.productTitle,
+                      "productId":oneprice.productId});
+                  })
+                  return alldata;
+                }
+                catch(e){
+                  return [];
+                }
+            },
             ifprice: function(leg){
                 try{
                   return leg.price[0][0].fares[0].amount;
@@ -816,8 +834,8 @@
                         }
                     ],
                     "temporal": {
-                        "earliestDepature": new Date(leg.Origin.date + "T" + leg.Origin.time).toISOString().split(".")[0]+"Z",
-                        "latestArrival": new Date(leg.Destination.date + "T" + leg.Destination.time).toISOString().split(".")[0]+"Z"
+                        "earliestDepature": moment.tz(leg.Origin.date + "T" + leg.Origin.time,"Europe/Stockholm").tz("UTC").format(),
+                        "latestArrival":  moment.tz(leg.Destination.date + "T" + leg.Destination.time,"Europe/Stockholm").tz("UTC").format()
                     }
                   };
                   var cats = next.traveltypes[leg.Product.operatorCode];
