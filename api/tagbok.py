@@ -199,7 +199,7 @@ stopids = {
     "740000686":"Stavre station",
     "740000924":"Stenstorp",
     "740000001":"Stockholm Central",
-    "740000622":"Sthlm Cityterm",
+    "740000622":"Stockholm Central",
     "740000765":"Stockholm Södra",
     "740000347":"Storfors station",
     "740000025":"Storlien",
