@@ -314,7 +314,7 @@
                             <a v-if="selectoperators" v-on:click="toggle_operator(opid)" v-for="(operatordata, opid) in alloperatorsOtt">
                             <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
                             </a>
-                            <a v-if="!selectoperators" v-bind:href="operatordata['url']" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
+                            <a v-if="!selectoperators" v-bind:href="operatorUrlById(opid)" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
                             <img style="height:20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
                             </a>
                             <hr>
