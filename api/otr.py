@@ -44,8 +44,12 @@ def StopIdToData(id):
     lat = row[0]
     lon = row[1]
     name = row[2]
-  for row in stops.execute("SELECT agency_stop_id FROM astops WHERE agency_id = 253 AND stop_id = %s" % id):
-    id = row[0]
+  if id == "740000172":
+    id = "184"
+  else:
+    for row in stops.execute("SELECT agency_stop_id FROM astops WHERE agency_id = 253 AND stop_id = %s" % id):
+      id = row[0]
+
   return {"name":name, "id":id, "X":lat, "Y":lon}
    
 @post('/api/v1/buy')
@@ -101,11 +105,12 @@ def search():
         "walk":"false"
         }
 
+    print params
     result = requests.get(
         "https://rest.ostgotatrafiken.se/journey/Find",
         params=params
         )
-    
+
     trips = []
     for trip in result.json()["Journeys"]:
         if stringToUnixTS(trip["Departure"]+"+02:00") >= stringToUnixTS(search["temporal"]["earliestDepature"]) and stringToUnixTS(trip["Arrival"]+"+02:00") <= stringToUnixTS(search["temporal"]["latestArrival"]):
