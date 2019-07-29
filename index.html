@@ -258,7 +258,15 @@
                                                   <option v-for="(travelertype, id) in traveltypes[leg.Product.operatorCode]" v-bind:value="id" class="btn btn-secondary dropdown-toggle">{{travelertype}}</option>
                                                 </select>
                                                 <div class="input-group-append">
-                                                  <button v-if="ifcode(leg)" v-on:click="buy(leg.Product.operatorCode,ifcode(leg))" class="btn btn-sm btn-secondary">Köp {{ ifdesc(leg) }} för {{ ifprice(leg) }} SEK</button>
+                                                  <div class="btn-group-sm" v-if="ifcode(leg)">
+                                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" v-on:click="leg.showprices = !leg.showprices">
+                                                        {{ pricedata(leg)[leg.selectedprice].productTitle }} för {{ pricedata(leg)[leg.selectedprice].amount }} SEK
+                                                    </button>
+                                                    <div class="dropdown-menu" v-bind:class="{'show':leg.showprices}">
+                                                        <button v-for="(price, pindex) in pricedata(leg)" v-on:click="leg.selectedprice=pindex;leg.showprices = false" class="dropdown-item">{{ price.productTitle }} för {{ price.amount }} SEK</button>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-primary" v-on:click="buy(leg.Product.operatorCode,pricedata(leg)[leg.selectedprice].productId)">Köp</button>
+                                                  </div>
                                                   <span v-else="" class="input-group-text">Hittar inget pris</span>
                                                 </div>
                                               </div>
@@ -852,6 +860,8 @@
                   } else {
                     search.travellersPerCategory[0].cat = leg.typeid;
                   }
+                  next.$set(leg, 'showprices', false);
+                  next.$set(leg, 'selectedprice', 0);
                   var thisleg = leg;
                   var thisf = next
                   postAjax("/price/"+leg.Product.operatorCode+"/api/v1/product", JSON.stringify(search), function(data){ thisf.$set(thisleg, 'price', data);});
