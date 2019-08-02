@@ -732,7 +732,7 @@ def search():
         headers=headers,
         cookies=cookies
         )
-    print result.content;
+
     trips = []
     for j in result.json()["journeyAdvices"]:
       if j["departureDateTime"]/1000 >= isoToTimeStamp(search["temporal"]["earliestDepature"]):
