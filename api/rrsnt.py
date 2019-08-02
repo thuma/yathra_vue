@@ -217,6 +217,7 @@ stopids = {
     "740000024":"Söderbärke",
     "740000154":"Söderhamn station",
     "740000055":"Södertälje Syd",
+    "740000049":"Södertälje hamn",
     "760090014":"Sösterbekk",
     "740000233":"Tanum",
     "740000301":"Tierp station",
@@ -320,8 +321,8 @@ def search():
     #}
 
     cookies = {
-        "JSESSIONID":"5QGTwEVnGAxr-y6Hs0PKejssUJO0WtuGfjLd__ql.ad89019e674a;",
-        "JSESSIONID":"vbdS8y8OFeCnHc4Wv0Na3M4if6-n_5fS-PP54uBp.f988d1cfe4f5;"
+        "JSESSIONID":"W0BCvEhipap9JmzDXBbIfJlcvxP1QixoEDnsoGUn.3c76573dda13;",
+        "JSESSIONID":"6QeSQYnEy_0ag3Whb0QPiVzYSrk6JCUvW_fstxq_.3c76573dda13;"
         }
     headers = {
       'content-type': 'application/json',
@@ -731,7 +732,7 @@ def search():
         headers=headers,
         cookies=cookies
         )
-
+    print result.content;
     trips = []
     for j in result.json()["journeyAdvices"]:
       if j["departureDateTime"]/1000 >= isoToTimeStamp(search["temporal"]["earliestDepature"]):
