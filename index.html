@@ -60,7 +60,7 @@
                                 <button class="dropdown-item" type="button" v-on:click='from = "";  from_station = {"id":"","name":"","scbid":""};frompickershow=false;'>Resa fältet</button>
                             </div>
                             <div v-if="from !== from_station.name" class="dropdown-menu" style="display:block;">
-                                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
+                                <button type="button" v-on:click="set_from_station(station)" class="dropdown-item kommun" v-for="station in fromStations">{{station.name}}<br><span class="kommun">{{showArea(station)}}</span></button>
                             </div>
                         </div>
                         <input type="text" class="form-control border-dark" v-bind:placeholder="place_holder_point[from_type]" v-model="from">
@@ -84,7 +84,7 @@
                                 <button class="dropdown-item" type="button" v-on:click='to = ""; to_station = {"id":"","name":"","scbid":""};topickershow=false;'>Resa fältet</button>
                             </div>
                             <div v-if="to !== to_station.name" class="dropdown-menu dropdown-menu" style="display:block;">
-                                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{areas.kommun[station.scbid]}}, {{areas.lan[station.scbid[0] + station.scbid[1]]}}</span></button>
+                                <button type="button" v-on:click="set_to_station(station)" class="dropdown-item kommun" v-for="station in toStations">{{station.name}}<br><span class="kommun">{{showArea(station)}}</span></button>
                             </div>
                         </div>
                         <input type="text" class="form-control border-dark" v-bind:placeholder="place_holder_point[to_type]" v-model="to">
@@ -671,6 +671,23 @@
                 }
           },
           methods: {
+            showArea: function(station){
+            console.log(station.scbid)
+            if (station.scbid == ""){
+               if(station.id.startsWith("86")){
+                 return "Danmark";
+               }
+               if(station.id.startsWith("80")){
+                 return "Tyskland";
+               }
+               if(station.id.startsWith("76")){
+                 return "Norge";
+               }
+              } 
+            else {
+              return this.areas.kommun[station.scbid] + ", " +  this.areas.lan[station.scbid[0] + station.scbid[1]];
+              }
+            },
             grouptypes: function(leg){
             var icons = {}
             var next = this
