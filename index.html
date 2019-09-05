@@ -1108,6 +1108,7 @@
             });
             getAjaxCSV("static_data/exstops.txt", function (csv) {
                 stations = csv.filter(station => station[0]!=="");
+                stations.push(["800030425","Kiel Hafen","","",""]);
                 then.allstations = stations.map(station => to_station(station)).slice(1).sort(compareStations);
             });
             getAjaxCSV("static_data/orter.txt", function (csv) {
@@ -1120,6 +1121,7 @@
             getAjaxCSV("static_data/agency.txt", function (operators) {
                 var next = then;
                 operators = operators.filter(station => station[0]!=="");
+                operators.push(["6","Stena Line","https://www.stenaline.se"]);
                 operators.slice(1).forEach(function(data){
                     var opid = data[0];
                     next.$set(next.alloperators, data[0], {"name":data[1], "url":data[2],"img":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="});
