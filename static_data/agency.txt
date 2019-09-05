@@ -33,11 +33,9 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 289,Länstrafiken Örebro,http://www.lanstrafiken.se/,Europe/Stockholm,sv
 300,Öresundståg,http://www.oresundstag.se/,Europe/Stockholm,sv
 310,BT Buss,http://www.bergslagstaget.se/,Europe/Stockholm,sv
-315,Tågkompaniet,http://www.resrobot.se/,Europe/Stockholm,sv
+315,Tågkompaniet,https://www.tagkompaniet.se/#/,Europe/Stockholm,sv
 317,Värmlandstrafik,http://varmlandstrafik.se/,Europe/Stockholm,sv
-319,Engelsberg-Norbergs Jä,http://www.enj.se/,Europe/Stockholm,sv
 320,Waxholmsbolaget,http://www.waxholmsbolaget.se/,Europe/Stockholm,sv
-321,DVVJ,http://www.dvvj.se/,Europe/Stockholm,sv
 322,Lennakatten,http://www.lennakatten.se/,Europe/Stockholm,sv
 327,Bus4You,http://www.nettbuss.se/,Europe/Stockholm,sv
 328,Nettbuss Express,http://www.nettbuss.se/,Europe/Stockholm,sv
@@ -54,10 +52,8 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 382,TJF Smalspåret,http://www.hwj.nu/,Europe/Stockholm,sv
 391,Nikkaluoktaexpressen,http://www.nikkaluoktaexpressen.se/,Europe/Stockholm,sv
 425,Fjäderholmslinjen,http://www.fjaderholmslinjen.se/,Europe/Stockholm,sv
-471,Styrsöbolaget,http://www.resrobot.se/,Europe/Stockholm,sv
 480,Bergkvarabuss,http://www.bergkvarabuss.se/,Europe/Stockholm,sv
 513,Tågkompaniet Norrtåg,https://www.norrtag.se,Europe/Stockholm,sv
-555,Inlandsbanan,http://inlandsbanan.se/,Europe/Stockholm,sv
 584,ÖSlJ,http://www.oslj.nu/,Europe/Stockholm,sv
 586,Tågab,http://www.tagakeriet.se/,Europe/Stockholm,sv
 601,Karlstadsbuss,http://karlstad.se/karlstadsbuss/,Europe/Stockholm,sv
@@ -70,7 +66,7 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 635,Piteå Lokaltrafik,http://www.citybuss.se/,Europe/Stockholm,sv
 636,Strömma,http://www.stromma.se/goteborg/,Europe/Stockholm,sv
 637,Boden Stadstrafik,http://www.boden.se/kommunen/samhalle-och-infrastruktur/lokaltrafik/,Europe/Stockholm,sv
-640,Bråvikslinjen,https://bravikslinjen.se/,Europe/Stockholm,sv
+640,Bråvikslinjen,http://toandfrom.se/,Europe/Stockholm,sv
 642,Skaraborgaren,http://www.skovdebuss.se/,Europe/Stockholm,sv
 644,Blåklintsbuss,http://www.blaklintsbuss.se/,Europe/Stockholm,sv
 646,Kiruna Stadstrafik,http://www.kiruna.se/Kommun/Trafik-infrastruktur/Busstrafik/,Europe/Stockholm,sv
@@ -81,12 +77,10 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 807,IKEA,https://www.ikea.com/ext/local-store/se/sv/stockholm-kungens-kurva/om-varuhuset/%20KOLLEKTIVTRAFIK/,Europe/Stockholm,sv
 808,Skärgårdsbåtarna i Uddevalla,http://www.skargardsbatarna.com/,Europe/Stockholm,sv
 812,MTR Express,https://mtrexpress.travel/,Europe/Stockholm,sv
-819,BybergNordin,http://www.bybergnordin.se/,Europe/Stockholm,sv
 821,Söne Buss,http://sonebuss.se/,Europe/Stockholm,sv
 824,Kalix stadstrafik,http://www.kalix.se/Samhalle/Lokaltrafik-och-resa/,Europe/Stockholm,sv
+830,Cinderellabåtarna,http://www.stromma.se/,Europe/Stockholm,sv
 831,Ekerö kommun,http://www.trafikverket.se/farjerederiet/farjeleder/farjeleder-i-stockholm213/ekeroleden/,Europe/Stockholm,sv
-835,Bohusläns Skärgårdstrafik AB,http://www.bohustrafik.se/index.html,Europe/Stockholm,sv
-837,Kneippbynbussen,http://kneippbyn.se/bo-resa/kneippbynbussen/,Europe/Stockholm,sv
 838,Flixbus,https://www.flixbus.se/,Europe/Stockholm,sv
 841,Brukslinjen,http://www.hallstahammar.se/boende-miljo-och-trafik/gator-trafik-och-resande/kollektivtrafik,Europe/Stockholm,sv
 845,Stockholms stad,http://ressel.se/,Europe/Stockholm,sv
