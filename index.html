@@ -353,7 +353,7 @@
                             <h5 class="text-center">Sätt att resa</h5>
                             <div class="row justify-content-center">
                               <div class="col-lg-2 col-md-3  col-sm-6 col-6 p-1" v-for="(mode, id) in catToName">
-                                <button class="btn btn-light btn-sm btn-block" v-bind:class="[mode_in_list(id)? '' : 'active']" v-on:click="toggle_mode(id)">
+                                <button class="btn btn-sm btn-light btn-block" v-bind:class="[mode_in_list(id)? '' : 'disabled']" v-on:click="toggle_mode(id)">
                                   {{catToIcon[id]}} {{mode}}
                                 </button>
                               </div>
