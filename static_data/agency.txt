@@ -66,7 +66,7 @@ agency_id,agency_name,agency_url,agency_timezone,agency_lang
 635,Piteå Lokaltrafik,http://www.citybuss.se/,Europe/Stockholm,sv
 636,Strömma,http://www.stromma.se/goteborg/,Europe/Stockholm,sv
 637,Boden Stadstrafik,http://www.boden.se/kommunen/samhalle-och-infrastruktur/lokaltrafik/,Europe/Stockholm,sv
-640,Bråvikslinjen,http://toandfrom.se/,Europe/Stockholm,sv
+640,Bråvikslinjen,https://bravikslinjen.se/,Europe/Stockholm,sv
 642,Skaraborgaren,http://www.skovdebuss.se/,Europe/Stockholm,sv
 644,Blåklintsbuss,http://www.blaklintsbuss.se/,Europe/Stockholm,sv
 646,Kiruna Stadstrafik,http://www.kiruna.se/Kommun/Trafik-infrastruktur/Busstrafik/,Europe/Stockholm,sv
