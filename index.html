@@ -339,17 +339,14 @@
                                 <img style="height:20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
                               </a>
                             </div>
-
-                            <hr>
                             <p v-if="!selectoperators" class="text-center">
-                              <button  class="btn btn-sm btn-secondary" v-on:click="selectoperators = !selectoperators">Välj operatörer</button> som tider och priser ska sökas med.
+                              <a v-on:click="selectoperators = !selectoperators" href="javascipt:">Välj operatörer</a> som tider och priser ska sökas med.
                             </p>
                             <p v-else="" class="text-center">
                               <button class="btn btn-sm btn-secondary" v-on:click="donotuseoperators=[]">Välj alla operatörer</button>
                               <button class="btn btn-sm btn-secondary"  v-on:click="donotuseoperators=Object.keys(yathra.alloperators)">Dölj alla operatörer</button>
                               <button class="btn btn-sm btn-secondary" v-on:click="selectoperators = false">Klar</button>
                             </p>
-                            <hr>
                             <h5 class="text-center">Sätt att resa</h5>
                             <div class="row justify-content-center">
                               <div class="col-lg-2 col-md-3  col-sm-6 col-6 p-1" v-for="(mode, id) in catToName">
