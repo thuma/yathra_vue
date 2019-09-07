@@ -317,20 +317,29 @@
                     <div class="card">
                         <div class="card-body">
                             <h5 class="text-center">Priser och tidtabeller för</h5>
-                            <a v-if="selectoperators" v-on:click="toggle_operator(opid)" v-for="(data, opid) in traveltypes">
-                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)"  v-bind:src="operatorImageById(opid)">
-                            </a>
+                            <div v-if="selectoperators">
+                              <a v-on:click="toggle_operator(opid)" v-for="(data, opid) in traveltypes">
+                                <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)"  v-bind:src="operatorImageById(opid)">
+                              </a>
+                            </div>
+                            <div  v-else="" style="overflow: hidden;display: flex;" id="pricescroll">
+                              <a v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
+                                <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="operatorImageById(opid)">
+                              </a>
+                            </div>
                             
-                            <a v-if="!selectoperators" v-bind:href="operatorUrlById(opid)" v-for="(data, opid) in traveltypes" target="_blank">
-                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatorNameById(opid)" v-bind:title="operatorNameById(opid)" v-bind:src="operatorImageById(opid)">
-                            </a>
                             <h5 class="text-center">Endast tidtabeller för</h5>
-                            <a v-if="selectoperators" v-on:click="toggle_operator(opid)" v-for="(operatordata, opid) in alloperatorsOtt">
-                            <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
-                            </a>
-                            <a v-if="!selectoperators" v-bind:href="operatorUrlById(opid)" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
-                            <img style="height:20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
-                            </a>
+                            <div v-if="selectoperators">
+                              <a v-on:click="toggle_operator(opid)" v-for="(operatordata, opid) in alloperatorsOtt">
+                                <img style="height: 20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
+                              </a>
+                            </div>
+                            <div v-else="" style="overflow: hidden;display: flex;" id="timescroll">
+                              <a v-bind:href="operatorUrlById(opid)" v-for="(operatordata, opid) in alloperatorsOtt" target="_blank">
+                                <img style="height:20px; margin:7px;" v-bind:style="grayoperator(opid)" v-bind:alt="operatordata['name']" v-bind:title="operatordata['name']" v-bind:src="operatorImageById(opid)">
+                              </a>
+                            </div>
+
                             <hr>
                             <p v-if="!selectoperators" class="text-center">
                               <button  class="btn btn-sm btn-secondary" v-on:click="selectoperators = !selectoperators">Välj operatörer</button> som tider och priser ska sökas med.
@@ -1097,6 +1106,28 @@
              }
           },
           created: function() {
+            scrollspeddanddirection = 2;
+            window.setInterval(function(){
+              scrollelement = document.getElementById("pricescroll");
+              scrollelement.scrollLeft = scrollelement.scrollLeft + scrollspeddanddirection;
+              if(scrollelement.scrollLeft >= (scrollelement.scrollWidth - scrollelement.clientWidth)){
+                scrollspeddanddirection = -2;
+              }
+              if(scrollelement.scrollLeft == 0){
+                scrollspeddanddirection = 2;
+              }
+            }, 30);
+            scrollspeddanddirectiona = 2;
+            window.setInterval(function(){
+              scrollelement = document.getElementById("timescroll");
+              scrollelement.scrollLeft = scrollelement.scrollLeft + scrollspeddanddirectiona;
+              if(scrollelement.scrollLeft >= (scrollelement.scrollWidth - scrollelement.clientWidth)){
+                scrollspeddanddirectiona = -2;
+              }
+              if(scrollelement.scrollLeft == 0){
+                scrollspeddanddirectiona = 2;
+              }
+            }, 30);
             var then = this;
             this.operators.forEach(function(operator){
                 getAjax("/price/" + operator + "/api/v1/productcat/travellers", function(data){
