@@ -815,7 +815,7 @@
             travelDate: function(trip){
               var days = ["Sö","Må","Ti","On","To","Fr","Lö"];
               tid = new Date(trip.LegList.Leg[0].Origin.date+ "T" + trip.LegList.Leg[0].Origin.time);
-              return days[tid.getDay()] + " " + tid.getDate() + "/" + tid.getMonth();
+              return days[tid.getDay()] + " " + tid.getDate() + "/" + (tid.getMonth()+1);
             },
             totallowestprice: function(trip){
               var total = 0;
