@@ -291,7 +291,9 @@
                                             <div class="btn-group btn-group-sm">
                                               <button class="btn btn-secondary" v-for="(data, icon) in grouptypes(leg)" v-bind:title="data.texts" v-on:click="alert(data.texts)">{{ icon }}</button>
                                               <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">📅</button>
-                                              <button class="btn btn-sm btn-secondary" v-on:click="makeICS(trip)" type="button">💾</button>
+                                              <button class="btn btn-sm btn-secondary" v-on:click="makeLink(trip)" type="button">&#x2709;</button>
+                                              <button class="btn btn-sm btn-secondary" v-on:click="store_trip(trip)" type="button">&#128190;</button>
+                                              <button class="btn btn-sm btn-secondary" v-on:click="remove_trip(trip)" type="button">&#x274C;</button>
                                             </div>
                                         </div>
                                     </div>
@@ -678,7 +680,6 @@
           },
           methods: {
             showArea: function(station){
-            console.log(station.scbid)
             if (station.scbid == ""){
                if(station.id.startsWith("86")){
                  return "Danmark";
@@ -991,7 +992,7 @@
               } else if (state == "after"){
                 context = "&context="+this.scrF ;
               } else if (sate = "new"){
-                this.timetables = [];
+                this.timetables = this.get_stored_trips();
               }
               var xhr = new XMLHttpRequest();
               var next = this
@@ -1009,7 +1010,7 @@
                         next.timetables = ttable.concat(next.timetables)
                         next.scrB = JSON.parse(xhr.responseText).scrB
                     } else if (state == "new"){
-                        next.timetables = ttable;
+                        next.timetables = ttable.concat(next.timetables);
                         next.scrB = JSON.parse(xhr.responseText).scrB
                         next.scrF = JSON.parse(xhr.responseText).scrF
                     } else if (state == "after"){
@@ -1048,26 +1049,38 @@
               save.forEach(savename => savedata[savename]=savefrom[savename]);
               document.location.hash = btoa(JSON.stringify(savedata));
             },
-            save_search: function (){
-              this.searches.push({
-                from_station: this.from_station,
-                to_station: this.to_station,
-                date: this.date,
-                time_slider: this.time_slider
-              });
-            localStorage.setItem("searches_list", JSON.stringify(this.searches));
+            store_trip: function (trip){
+                var trips = this.get_stored_trips()
+                trips.push(trip);
+                localStorage.setItem("trips_list", JSON.stringify(trips));
             },
-            restore_search: function (load_search){
-              this.from_station = load_search.from_station;
-              this.from = load_search.from_station.name;
-              this.to_station = load_search.to_station;
-              this.to = load_search.to_station.name;
-              this.date = load_search.date;
-              this.time_slider = load_search.time_slider;
-              this.find_in_timetable();
+            get_stored_trips: function (trip){
+                if (!localStorage.getItem("trips_list")){
+                    return [];
+                }
+                return JSON.parse(localStorage.getItem("trips_list"));
             },
-            store_trips: function (){
-                localStorage.setItem("trips_list", JSON.stringify(this.trips));
+            remove_trip: function (trip){
+                var stored_trips = this.get_stored_trips();
+                trip_data = JSON.stringify(trip);
+                newsave = [];
+                for(var i = 0; i < stored_trips.length; i++){
+                    if (JSON.stringify(stored_trips[i]) !== trip_data) {
+                        newsave.push(stored_trips[i]);
+                    }
+                }
+                localStorage.setItem("trips_list", JSON.stringify(newsave));
+                newsave = [];
+                for(var i = 0; i < this.timetables.length; i++){
+                    if (JSON.stringify(this.timetables[i]) !== trip_data) {
+                        newsave.push(this.timetables[i]);
+                    }
+                }
+                this.timetables = newsave;
+            },
+            makeLink: function (trip){
+                var hash = btoa(JSON.stringify({"timetables":[trip]}));
+                window.open("mailto:?subject=Resa&body=https://www.biljettpriser.nu/#" + hash);
             },
             makeICS: function (trip){
               var start = new Date(trip.LegList.Leg[0].Origin.date + " " + trip.LegList.Leg[0].Origin.time);
@@ -1168,8 +1181,9 @@
             var hashdata = document.location.hash.replace("#","");
             if(hashdata !== ""){
               savedata = JSON.parse(atob(hashdata));
-              restore.forEach(savename => saveto[savename]=savedata[savename]);
+              Object.keys(savedata).forEach(savename => saveto[savename]=savedata[savename]);
             }
+            this.timetables = this.timetables.concat(this.get_stored_trips());
             },
           computed: {
             alloperatorsOtt: function(){
@@ -1443,26 +1457,6 @@
             return 1;
           }
           return 0;
-        }
-        
-        try{
-          list = JSON.parse(localStorage.getItem("searches_list"));
-          if(list != null){
-            yathra.searches = list;
-            restore_search(searches.searches[0]);
-          }
-        }
-        catch(a){
-        }
-        
-        try{
-          list = JSON.parse(localStorage.getItem("trips_list"));
-          if(list != null){
-            yathra.trips = list;
-          }
-        
-        }
-        catch(a){
         }
           
     </script>
